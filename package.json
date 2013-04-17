@@ -1,0 +1,26 @@
+{
+  "name": "orgjs",
+  "version": "0.2.0",
+  "description": "An orgmode format parser/renderer",
+  "main": "index.js",
+  "scripts": {
+    "test": "grunt test"
+  },
+  "repository": "",
+  "keywords": [
+    "orgmode"
+  ],
+  "author": "subtenante@gmail.com",
+  "license": "MIT",
+  "gitHead": "a62df93b7ba24ce0ac031ab5ba738d456cfeaaa3",
+  "devDependencies": {
+    "jasmine-node": "~1.7.0",
+    "grunt": "~0.4.1",
+    "grunt-contrib-jasmine-node": "0.0.2",
+    "browserify": "~2.12.0",
+    "grunt-browserify": "~0.2.2",
+    "uglify-js": "~2.2.5",
+    "grunt-contrib-uglify": "~0.2.0",
+    "grunt-contrib-jshint": "~0.4.3"
+  }
+}
