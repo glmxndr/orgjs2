@@ -14,8 +14,10 @@ module.exports = function(grunt) {
       }
     },
     browserify: {
-      src: ['lib/src/**/*.js'],
-      dest: 'dist/<%= pkg.name %>.js'
+      orgjs:{
+        src: ['lib/src/core.js'],
+        dest: 'dist/orgjs.js'
+      }
     },
     uglify: {
       options: {
@@ -24,7 +26,7 @@ module.exports = function(grunt) {
       },
       dist: {
         files: {
-          'dist/<%= pkg.name %>.min.js': ['<%= browserify.dest %>']
+          'dist/orgjs.min.js': ['dist/orgjs.js']
         }
       }
     },
