@@ -13,12 +13,29 @@ module.exports = function(grunt) {
         }
       }
     },
+
+    coffeeify: {
+      options: {
+        debug: false,
+        requires: []
+      },
+      test: {
+        files: [
+          {
+            src:['lib/src/**/*.js', 'lib/spec/**/*.coffee'], 
+            dest:'test/all.js'
+          }
+        ]
+      }
+    },
+
     browserify: {
       orgjs:{
         src: ['lib/src/core.js'],
         dest: 'dist/orgjs.js'
-      }
+      },
     },
+
     uglify: {
       options: {
         // the banner is inserted at the top of the output
@@ -32,10 +49,22 @@ module.exports = function(grunt) {
     },
     "jasmine-node": {
       options: {
-        coffee: true
+        coffee: true,
+        noStack: true
       },
       run: {
         spec: "lib/spec"
+      }
+    },
+    exec: {
+      test: {
+        cmd: './node_modules/jasmine-node/bin/jasmine-node --coffee --noStack ./lib/spec/'
+      },
+      testStack: {
+        cmd: './node_modules/jasmine-node/bin/jasmine-node --coffee ./lib/spec/'
+      },
+      debug: {
+        cmd: 'node --debug-brk ./node_modules/jasmine-node/bin/jasmine-node --coffee --noStack ./lib/spec/'
       }
     }
 
@@ -45,11 +74,13 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-jasmine-node');
+  grunt.loadNpmTasks('grunt-coffeeify');
+  grunt.loadNpmTasks('grunt-exec');
 
-  // this would be run by typing "grunt test" on the command line
-  grunt.registerTask('test', ['jshint', 'jasmine-node']);
-
-  // the default task can be run just by typing "grunt" on the command line
+  grunt.registerTask('lint', ['jshint']);
+  grunt.registerTask('test', ['exec:test']);
+  grunt.registerTask('testStack', ['exec:testStack']);
+  grunt.registerTask('debug', ['coffeeify:test']);
   grunt.registerTask('default', ['jshint', 'jasmine-node', 'browserify', 'uglify']);
 
 };
