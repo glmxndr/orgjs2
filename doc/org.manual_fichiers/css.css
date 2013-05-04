@@ -1,0 +1,18 @@
+@font-face {
+	font-family: Droid Sans;
+	src: local("Droid Sans"), local("DroidSans"), url(http://themes.googleusercontent.com/static/fonts/droidsans/v3/s-BiyweUPV0v-yRb-cjciFQlYEbsez9cZjKsNMjLOwM.eot) format("embedded-opentype"), url(http://themes.googleusercontent.com/static/fonts/droidsans/v3/s-BiyweUPV0v-yRb-cjciBsxEYwM7FgeyaSgU71cLG0.woff) format("woff");
+	font-weight: 400;
+	font-style: normal;
+}
+@font-face {
+	font-family: Droid Sans Mono;
+	src: local("Droid Sans Mono"), local("DroidSansMono"), url(http://themes.googleusercontent.com/static/fonts/droidsansmono/v4/ns-m2xQYezAtqh7ai59hJTwtzT4qNq-faudv5qbO9-U.eot) format("embedded-opentype"), url(http://themes.googleusercontent.com/static/fonts/droidsansmono/v4/ns-m2xQYezAtqh7ai59hJUYuTAAIFFn5GTWtryCmBQ4.woff) format("woff");
+	font-weight: 400;
+	font-style: normal;
+}
+@font-face {
+	font-family: Droid Serif;
+	src: local("Droid Serif"), local("DroidSerif"), url(http://themes.googleusercontent.com/static/fonts/droidserif/v3/0AKsP294HTD-nvJgucYTaGfQcKutQXcIrRfyR5jdjY8.eot) format("embedded-opentype"), url(http://themes.googleusercontent.com/static/fonts/droidserif/v3/0AKsP294HTD-nvJgucYTaIbN6UDyHWBl620a-IRfuBk.woff) format("woff");
+	font-weight: 400;
+	font-style: normal;
+}

@@ -1,0 +1,127 @@
+@import url( http://fonts.googleapis.com/css?family=Droid+Sans|Droid+Sans+Mono|Droid+Serif );
+html {
+	padding: 0px;
+}
+body {
+	margin: 40pt; padding: 0px; line-height: 1.3; font-family: "Droid Serif", "Lucida Grande", "Lucida Sans Unicode", "DejaVu Sans", Verdana, sans-serif; font-size: 11pt;
+}
+.title {
+	background: url("http://orgmode.org/org-mode-unicorn.png") no-repeat 12px 5px rgb(238, 238, 238); padding: 0px; left: 0px; top: 0px; width: 100%; height: 54px; margin-top: 0px; display: inline; position: fixed; z-index: 99;
+}
+#orgquote {
+	padding: 5pt; top: 77px; width: 100%; text-align: center; color: rgb(204, 204, 204); font-family: Courier new; font-size: 90%; display: block; position: fixed; z-index: 98; box-shadow: 0px 15px 10px #fff; background-color: black;
+}
+#paypal {
+	top: 15px; right: 10px; position: fixed; z-index: 100;
+}
+#paypal button {
+	top: 15px; width: 90px; height: 40px; right: 14px; color: white; font-family: Courier new; font-weight: bold; display: block; position: fixed; cursor: pointer; box-shadow: 5px 5px 5px #888; background-color: rgb(83, 225, 227); -webkit-box-shadow: 5px 5px 5px #888; -moz-box-shadow: 5px 5px 5px #888; -webkit-border-radius: 10px; -moz-border-radius: 10px;
+}
+#paypal button:hover {
+	top: 15px; width: 90px; height: 40px; right: 9px; font-weight: bold; margin-top: 5px; margin-left: 5px; display: block; position: fixed; box-shadow: 0px 0px 0px #888; background-color: rgb(73, 244, 246); -webkit-box-shadow: 0px 0px 0px #888; -moz-box-shadow: 0px 0px 0px #888; -webkit-border-radius: 10px; -moz-border-radius: 10px;
+}
+h1.title {
+	padding-top: 23px; padding-left: 70pt; font-family: Courier New; font-size: 23pt; text-shadow: 2px 2px 4px #999;
+}
+#linklist {
+	left: 0px; top: 107px; width: 180px; color: black; padding-top: 0px; padding-right: 0px; font-family: Courier New; font-size: 13pt; margin-top: 0px; position: fixed; z-index: 100; box-shadow: 8px 8px 12px #ccc; background-color: rgb(255, 255, 255); -webkit-border-bottom-right-radius: 10px; -moz-border-radius-bottomright: 10px;
+}
+#linklist a {
+	padding: 7pt; color: black; font-weight: normal; text-decoration: none; display: block;
+}
+#linklist ul {
+	margin: 0px; padding: 0px;
+}
+#linklist li {
+	margin: 0px; text-align: right;
+}
+.timestamp {
+	color: rgb(136, 136, 136); font-family: Courier New;
+}
+#linklist li:hover {
+	border-left-color: rgb(83, 125, 123); border-left-width: 7px; border-left-style: solid;
+}
+pre {
+	padding: 12pt; border: currentColor; color: black; overflow: auto; font-family: Courier New; font-size: 95%; margin-bottom: 14pt; box-shadow: 5px 5px 5px #888; background-color: rgb(238, 238, 238);
+}
+#buttons {
+	left: 20px; width: 100px; bottom: 10px; position: fixed; z-index: 100;
+}
+.ok {
+	opacity: 0.2; -moz-opacity: .2;
+}
+.ok:hover {
+	opacity: 1; -moz-opacity: 1;
+}
+.outline-2 {
+	left: 215px; top: 105px; width: 75%; padding-bottom: 5pt; position: relative;
+}
+#twit {
+	top: 362px; position: fixed; z-index: 100; opacity: 0.2; box-shadow: 8px 8px 12px #ccc; -webkit-border-bottom-right-radius: 10px; -moz-border-radius-bottomright: 10px; -moz-opacity: .2;
+}
+#twit:hover {
+	top: 362px; position: fixed; z-index: 100; opacity: 1; box-shadow: 8px 8px 12px #ccc; -moz-opacity: 1;
+}
+#outline-container-1 {
+	padding-top: 3pt;
+}
+.outline-2 h2 {
+	font-family: Courier New;
+}
+.outline-2 h3 {
+	font-family: Courier New;
+}
+p {
+	text-align: justify; margin-top: 0px;
+}
+a:link {
+	font-weight: normal; text-decoration: none;
+}
+a:visited {
+	font-weight: normal; text-decoration: none;
+}
+a:hover {
+	text-decoration: underline;
+}
+a:active {
+	text-decoration: underline;
+}
+dd {
+	text-align: justify; margin-bottom: 14pt;
+}
+dt {
+	padding: 3px; color: rgb(28, 48, 48); font-family: Courier New; font-size: 110%; margin-bottom: 3px;
+}
+li {
+	margin: 10px; text-align: justify; list-style-image: url("http://orgmode.org/triangle.png");
+}
+#table-of-contents {
+	background: white; top: 0em; text-align: right; right: 0em; overflow: auto; font-size: 9pt; position: fixed; z-index: 200; max-height: 80%; -webkit-box-shadow: 0 0 1em #777777; -moz-box-shadow: 0 0 1em #777777; -webkit-border-bottom-left-radius: 5px; -moz-border-radius-bottomleft: 5px;
+}
+#table-of-contents h2 {
+	padding-top: 0.05em; padding-bottom: 0.05em; padding-left: 0.5em; font-size: 9pt; font-weight: normal; max-width: 8em;
+}
+#table-of-contents ul {
+	padding: 0px; margin-bottom: 10pt; margin-left: 14pt;
+}
+#table-of-contents li {
+	list-style: none; margin: 1px; padding: 0px;
+}
+#table-of-contents ul > :first-child {
+	color: blue;
+}
+#table-of-contents #text-table-of-contents {
+	text-align: left; display: none;
+}
+#table-of-contents:hover #text-table-of-contents {
+	padding: 0.5em; margin-top: -1.5em; display: block;
+}
+img.random {
+	border: 1px solid black; margin-bottom: 10pt; max-height: 380px; max-width: 750px;
+}
+@media screen
+{
+#table-of-contents {
+	border: 1px solid rgb(204, 204, 204); overflow: auto; float: right; max-width: 50%;
+}
+}

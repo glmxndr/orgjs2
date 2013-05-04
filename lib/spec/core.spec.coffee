@@ -1,4 +1,4 @@
-Org = require('../src/core.js');
+Org = require '../src/core'
 
 describe 'Org Config', ->
   it 'should accept the heading TODO configuration', ->

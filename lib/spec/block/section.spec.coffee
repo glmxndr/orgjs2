@@ -17,26 +17,13 @@ describe 'Section.consume', ->
   txt = """
   Introduction
   * Main title
-    Main content
-    + A list item1
-      + A sub item1
-      + A sub item2
-        continued
-
-        With new para.
-    + A list item2
-    End of main content
   ** Sub1
-
-     Sub1 content
-
   ** Sub2
   * Conclusion
     The end
   """
   doc = new Section(new Org(), null)
   doc.consume(new Lines(txt))
-  console.log(doc, Block.precedence)
 
   it 'should parse the correct structure', ->
     expect(doc.children().length).toBe 2

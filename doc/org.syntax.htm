@@ -1,0 +1,933 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- saved from url=(0043)http://orgmode.org/worg/dev/org-syntax.html -->
+<!--?xml version="1.0" encoding="iso-8859-1"?--><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><HTML 
+lang="en" lang="en" xml:lang="en" 
+xmlns="http://www.w3.org/1999/xhtml"><HEAD><META content="IE=10.000" 
+http-equiv="X-UA-Compatible">
+ <TITLE>Org Syntax (draft)</TITLE> 
+<META http-equiv="Content-Type" content="text/html;charset=iso-8859-1"> 
+<META name="title" content="Org Syntax (draft)"> 
+<META name="GENERATOR" content="MSHTML 10.00.9200.16540"> 
+<META name="generated" content="2013-03-27T12:16-0500"> 
+<META name="author" content="Nicolas Goaziou"> 
+<META name="description" content=""> 
+<META name="keywords" content=""> <LINK title="Standard" href="org.syntax_fichiers/worg.css" 
+rel="stylesheet" type="text/css"> <LINK title="Zenburn" href="org.syntax_fichiers/worg-zenburn.css" 
+rel="alternate stylesheet" type="text/css"> <LINK title="Classic" href="org.syntax_fichiers/worg-classic.css" 
+rel="alternate stylesheet" type="text/css"> <LINK href="http://orgmode.org/css/lightbox.css" 
+rel="stylesheet" type="text/css" media="screen"> <LINK href="/org-mode-unicorn.ico" 
+rel="SHORTCUT ICON" type="image/x-icon"> <LINK href="/org-mode-unicorn.ico" rel="icon" 
+type="image/ico"> 
+<SCRIPT type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2013 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</SCRIPT>
+ 
+<SCRIPT type="text/javascript">
+    function rpl(expr,a,b) {
+      var i=0
+      while (i!=-1) {
+         i=expr.indexOf(a,i);
+         if (i>=0) {
+            expr=expr.substring(0,i)+b+expr.substring(i+a.length);
+            i+=b.length;
+         }
+      }
+      return expr
+    }
+
+    function show_org_source(){
+       document.location.href = rpl(document.location.href,"html","org.html");
+    }
+</SCRIPT>
+ </HEAD> 
+<BODY>
+<DIV id="preamble">
+<SCRIPT type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-7691209-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</SCRIPT>
+ </DIV>
+<DIV id="content">
+<H1 class="title">Org Syntax (draft)</H1>
+<P>This document describes and comments Org syntax as it is currently read by 
+its parser (Org Elements) and, therefore, by the export framework.  It also 
+includes a few comments on that syntax. </P>
+<P>A core concept in this syntax is that only headlines and sections are
+ context-free<SUP><A name="fnr-.1" class="footref" href="http://orgmode.org/worg/dev/org-syntax.html#fn-.1">1</A></SUP><SUP>, 
+</SUP><SUP><A name="fnr-.2" class="footref" href="http://orgmode.org/worg/dev/org-syntax.html#fn-.2">2</A></SUP>. 
+ Every other syntactical part only exists within specific environments. </P>
+<P>Three categories are used to classify these environments: "Greater elements", 
+"elements", and "objects", from the broadest scope to the narrowest.  The word 
+"element" is used for both Greater and non-Greater elements, the context should 
+make that clear. </P>
+<P>The paragraph is the unit of measurement.  An element defines syntactical 
+parts that are at the same level as a paragraph, i.e. which cannot contain or be 
+included in a paragraph.  An object is a part that could be included in an 
+element.  Greater elements are all parts that can contain an element. </P>
+<P>Empty lines belong to the largest element ending before them.  For example, 
+in a list, empty lines between items belong are part of the item before them, 
+but empty lines at the end of a list belong to the plain list element. </P>
+<P>Unless specified otherwise, case is not significant. </P>
+<DIV id="table-of-contents">
+<H2>Table of Contents</H2>
+<DIV id="text-table-of-contents">
+<UL>
+  <LI><A href="http://orgmode.org/worg/dev/org-syntax.html#Headlines_and_Sections">Headlines 
+  and Sections</A></LI>
+  <LI><A 
+  href="http://orgmode.org/worg/dev/org-syntax.html#Affiliated_keywords">Affiliated 
+  Keywords</A></LI>
+  <LI><A 
+  href="http://orgmode.org/worg/dev/org-syntax.html#Greater_Elements">Greater 
+  Elements</A> 
+  <UL>
+    <LI><A 
+    href="http://orgmode.org/worg/dev/org-syntax.html#Greater_Blocks">Greater 
+    Blocks</A></LI>
+    <LI><A href="http://orgmode.org/worg/dev/org-syntax.html#Drawers_and_Property_Drawers">Drawers 
+    and Property Drawers</A></LI>
+    <LI><A 
+    href="http://orgmode.org/worg/dev/org-syntax.html#Dynamic_Blocks">Dynamic 
+    Blocks</A></LI>
+    <LI><A href="http://orgmode.org/worg/dev/org-syntax.html#Footnote_Definitions">Footnote 
+    Definitions</A></LI>
+    <LI><A 
+    href="http://orgmode.org/worg/dev/org-syntax.html#Inlinetasks">Inlinetasks</A></LI>
+    <LI><A href="http://orgmode.org/worg/dev/org-syntax.html#Plain_Lists_and_Items">Plain 
+    Lists and Items</A></LI>
+    <LI><A 
+    href="http://orgmode.org/worg/dev/org-syntax.html#Tables">Tables</A></LI></UL></LI>
+  <LI><A 
+  href="http://orgmode.org/worg/dev/org-syntax.html#Elements">Elements</A> 
+  <UL>
+    <LI><A href="http://orgmode.org/worg/dev/org-syntax.html#Babel_Call">Babel 
+    Call</A></LI>
+    <LI><A 
+    href="http://orgmode.org/worg/dev/org-syntax.html#Blocks">Blocks</A></LI>
+    <LI><A href="http://orgmode.org/worg/dev/org-syntax.html#Clock-_Diary_Sexp_and_Planning">Clock, 
+    Diary Sexp and Planning</A></LI>
+    <LI><A 
+    href="http://orgmode.org/worg/dev/org-syntax.html#Comments">Comments</A></LI>
+    <LI><A 
+    href="http://orgmode.org/worg/dev/org-syntax.html#Fixed_Width_Areas">Fixed 
+    Width Areas</A></LI>
+    <LI><A 
+    href="http://orgmode.org/worg/dev/org-syntax.html#Horizontal_Rules">Horizontal 
+    Rules</A></LI>
+    <LI><A 
+    href="http://orgmode.org/worg/dev/org-syntax.html#Keywords">Keywords</A></LI>
+    <LI><A 
+    href="http://orgmode.org/worg/dev/org-syntax.html#LaTeX_Environments">LaTeX 
+    Environments</A></LI>
+    <LI><A 
+    href="http://orgmode.org/worg/dev/org-syntax.html#Node_Properties">Node 
+    Properties</A></LI>
+    <LI><A 
+    href="http://orgmode.org/worg/dev/org-syntax.html#Paragraphs">Paragraphs</A></LI>
+    <LI><A href="http://orgmode.org/worg/dev/org-syntax.html#Table_Rows">Table 
+    Rows</A></LI></UL></LI>
+  <LI><A href="http://orgmode.org/worg/dev/org-syntax.html#Objects">Objects</A> 
+  <UL>
+    <LI><A href="http://orgmode.org/worg/dev/org-syntax.html#Entities_and_LaTeX_Fragments">Entities 
+    and LaTeX Fragments</A></LI>
+    <LI><A 
+    href="http://orgmode.org/worg/dev/org-syntax.html#Export_Snippets">Export 
+    Snippets</A></LI>
+    <LI><A href="http://orgmode.org/worg/dev/org-syntax.html#Footnote_References">Footnote 
+    References</A></LI>
+    <LI><A href="http://orgmode.org/worg/dev/org-syntax.html#Inline_Babel_Calls_and_Source_Blocks">Inline 
+    Babel Calls and Source Blocks</A></LI>
+    <LI><A href="http://orgmode.org/worg/dev/org-syntax.html#Line_Breaks">Line 
+    Breaks</A></LI>
+    <LI><A 
+    href="http://orgmode.org/worg/dev/org-syntax.html#Links">Links</A></LI>
+    <LI><A 
+    href="http://orgmode.org/worg/dev/org-syntax.html#Macros">Macros</A></LI>
+    <LI><A href="http://orgmode.org/worg/dev/org-syntax.html#Targets_and_Radio_Targets">Targets 
+    and Radio Targets</A></LI>
+    <LI><A 
+    href="http://orgmode.org/worg/dev/org-syntax.html#Statistics_Cookies">Statistics 
+    Cookies</A></LI>
+    <LI><A href="http://orgmode.org/worg/dev/org-syntax.html#Subscript_and_Superscript">Subscript 
+    and Superscript</A></LI>
+    <LI><A href="http://orgmode.org/worg/dev/org-syntax.html#Table_Cells">Table 
+    Cells</A></LI>
+    <LI><A 
+    href="http://orgmode.org/worg/dev/org-syntax.html#Timestamp">Timestamps</A></LI>
+    <LI><A 
+    href="http://orgmode.org/worg/dev/org-syntax.html#Emphasis_Markers">Text 
+    Markup</A></LI></UL></LI></UL></DIV></DIV>
+<DIV class="outline-2" id="outline-container-Headlines_and_Sections">
+<H2 id="Headlines_and_Sections"><A name="sec-1" id="sec-1"></A>Headlines and 
+Sections</H2>
+<DIV class="outline-text-2" id="text-Headlines_and_Sections">
+<P>  A headline is defined as: </P>
+<PRE class="example">STARS KEYWORD PRIORITY TITLE TAGS
+</PRE>
+<P>  STARS is a string starting at column 0, containing at least one  asterisk 
+(and up to <CODE>org-inlinetask-min-level</CODE> if <CODE>org-inlinetask</CODE>  
+library is loaded) and ended by a space character.  The number of  asterisks is 
+used to define the level of the headline.  It's the  sole compulsory part of a 
+headline. </P>
+<P>  KEYWORD is a TODO keyword, which has to belong to the list defined  in 
+<CODE>org-todo-keywords-1</CODE>.  Case is significant. </P>
+<P>  PRIORITY is a priority cookie, i.e. a single letter preceded by  a hash 
+sign # and enclosed within square brackets. </P>
+<P>  TITLE can be made of any character but a new line.  Though, it will  match 
+after every other part have been matched. </P>
+<P>      TAGS is made of words containing any alpha-numeric character,  
+underscore, at sign, hash sign or percent sign, and separated with  colons. </P>
+<P>      Examples of valid headlines include: </P>
+<PRE class="example">*
+
+** DONE
+
+*** Some e-mail
+
+**** TODO [#A] COMMENT Title :tag:a2%:
+</PRE>
+<P>      If the first word appearing in the title is 
+<CODE>org-comment-string</CODE>,  the headline will be considered as 
+"commented".  If that first word  is <CODE>org-quote-string</CODE>, it will be 
+considered as "quoted".  In both  situations, case is significant. </P>
+<P>  If its title is <CODE>org-footnote-section</CODE>, it will be considered as 
+ a "footnote section".  Case is significant. </P>
+<P>  If <CODE>org-archive-tag</CODE> is one of its tags, it will be considered 
+as  "archived".  Case is significant. </P>
+<P>  A headline contains directly one section (optionally), followed by  any 
+number of deeper level headlines. </P>
+<P>  A section contains directly any greater element or element.  Only  a 
+headline can contain a section.  As an exception, text before the  first 
+headline in the document also belongs to a section. </P>
+<P>  If a quoted headline contains a section, the latter will be  considered as 
+a "quote section". </P>
+<P>  As an example, consider the following document: </P>
+<PRE class="src src-org">An introduction.
+
+<SPAN class="org-org-level-1">* A Headline </SPAN>
+
+  Some text.
+
+<SPAN class="org-org-level-2">** Sub-Topic 1</SPAN>
+
+<SPAN class="org-org-level-2">** Sub-Topic 2</SPAN>
+
+<SPAN class="org-org-level-3">*** Additional entry </SPAN>
+
+<SPAN class="org-org-level-2">** </SPAN><SPAN class="org-org-special-keyword">QUOTE</SPAN><SPAN class="org-org-level-2"> Another Sub-Topic</SPAN>
+
+   Some other text.
+</PRE>
+<P>  Its internal structure could be summarized as: </P>
+<PRE class="example">(document
+ (section)
+ (headline
+  (section)
+  (headline)
+  (headline
+   (headline))
+  (headline
+   (quote-section))))
+</PRE></DIV></DIV>
+<DIV class="outline-2" id="outline-container-Affiliated_keywords">
+<H2 id="Affiliated_keywords"><A name="sec-2" id="sec-2"></A>Affiliated 
+Keywords</H2>
+<DIV class="outline-text-2" id="text-Affiliated_keywords">
+<P>  With the exception of <A href="http://orgmode.org/worg/dev/org-syntax.html#Inlinetasks">inlinetasks</A>, 
+<A 
+href="http://orgmode.org/worg/dev/org-syntax.html#Plain_Lists_and_Items">items</A>, 
+<A href="http://orgmode.org/worg/dev/org-syntax.html#Clock-_Diary_Sexp_and_Planning">planning</A>, 
+<A href="http://orgmode.org/worg/dev/org-syntax.html#Clock-_Diary_Sexp_and_Planning">clocks</A>, 
+<A href="http://orgmode.org/worg/dev/org-syntax.html#Node_Properties">node 
+properties</A> and <A href="http://orgmode.org/worg/dev/org-syntax.html#Table_Rows">table 
+rows</A>, every other element type can be assigned  attributes. </P>
+<P>  This is done by adding specific keywords, named "affiliated  keywords", 
+just above the element considered, no blank line  allowed. </P>
+<P>  Affiliated keywords are built upon one of the following patterns:  "#+KEY: 
+VALUE", "#+KEY[OPTIONAL]: VALUE" or "#+ATTR_BACKEND: VALUE". </P>
+<P>  KEY is either "CAPTION", "HEADER", "NAME", "PLOT" or "RESULTS"  string. 
+</P>
+<P>  BACKEND is a string constituted of alpha-numeric characters, hyphens  or 
+underscores. </P>
+<P>  OPTIONAL and VALUE can contain any character but a new line.  Only  
+"CAPTION" and "RESULTS" keywords can have an optional value. </P>
+<P>  An affiliated keyword can appear more than once if KEY is either  "CAPTION" 
+or "HEADER" or if its pattern is "#+ATTR_BACKEND: VALUE". </P>
+<P>  "CAPTION", "AUTHOR", "DATE" and "TITLE" keywords can contain objects  in 
+their value and their optional value, if applicable. </P></DIV></DIV>
+<DIV class="outline-2" id="outline-container-Greater_Elements">
+<H2 id="Greater_Elements"><A name="sec-3" id="sec-3"></A>Greater Elements</H2>
+<DIV class="outline-text-2" id="text-Greater_Elements">
+<P>  Unless specified otherwise, greater elements can contain directly  any 
+other element or greater element excepted: </P>
+<UL>
+  <LI>elements of their own type, </LI>
+  <LI><A href="http://orgmode.org/worg/dev/org-syntax.html#Node_Properties">node 
+  properties</A>, which can only be found in <A href="http://orgmode.org/worg/dev/org-syntax.html#Drawers_and_Property_Drawers">property 
+  drawers</A>, </LI>
+  <LI><A href="http://orgmode.org/worg/dev/org-syntax.html#Plain_Lists_and_Items">items</A>, 
+  which can only be found in <A href="http://orgmode.org/worg/dev/org-syntax.html#Plain_Lists_and_Items">plain 
+  lists</A>. </LI></UL></DIV>
+<DIV class="outline-3" id="outline-container-Greater_Blocks">
+<H3 id="Greater_Blocks"><A name="sec-3-1" id="sec-3-1"></A>Greater Blocks</H3>
+<DIV class="outline-text-3" id="text-Greater_Blocks">
+<P>   Greater blocks consist in the following pattern: </P>
+<PRE class="example">#+BEGIN_NAME PARAMETERS
+CONTENTS
+#+END_NAME
+</PRE>
+<P>   NAME can contain any non-whitespace character. </P>
+<P>   PARAMETERS can contain any character other than new line, and can   be 
+omitted. </P>
+<P>   If NAME is "CENTER", it will be a "center block".  If it is   "QUOTE", it 
+will be a "quote block". </P>
+<P>   If the block is neither a center block, a quote block or a <A href="http://orgmode.org/worg/dev/org-syntax.html#Blocks">block 
+element</A>, it will be a "special block". </P>
+<P><A href="http://orgmode.org/worg/dev/org-syntax.html#CONTENTS">CONTENTS</A> 
+can contain any element, except : a line <CODE>#+END_NAME</CODE> on   its own.  
+Also lines beginning with STARS must be quoted by   a comma. </P></DIV></DIV>
+<DIV class="outline-3" id="outline-container-Drawers_and_Property_Drawers">
+<H3 id="Drawers_and_Property_Drawers"><A name="sec-3-2" id="sec-3-2"></A>Drawers 
+and Property Drawers</H3>
+<DIV class="outline-text-3" id="text-Drawers_and_Property_Drawers">
+<P>   Pattern for drawers is: </P>
+<PRE class="example">:NAME:
+CONTENTS
+:END:
+</PRE>
+<P>   NAME has to either be "PROPERTIES" or belong to <CODE>org-drawers</CODE> 
+list. </P>
+<P>   If NAME is "PROPERTIES", the drawer will become a "property   drawer". 
+</P>
+<P>   In a property drawers, <A href="http://orgmode.org/worg/dev/org-syntax.html#CONTENTS">CONTENTS</A> 
+can only contain <A href="http://orgmode.org/worg/dev/org-syntax.html#Node_Properties">node 
+property</A>   elements.  Otherwise it can contain any element but another 
+drawer   or property drawer. </P>
+<HR>
+
+<P>   It would be nice if users hadn't to register drawers names before   using 
+them in <CODE>org-drawers</CODE> (or through the <CODE>#+DRAWERS:</CODE> 
+keyword).   Anything starting with <CODE>^[ \t]*:\w+:[ \t]$</CODE> and ending 
+with    <CODE>^[ \t]*:END:[ \t]$</CODE> could be considered as a drawer.  — ngz 
+</P></DIV></DIV>
+<DIV class="outline-3" id="outline-container-Dynamic_Blocks">
+<H3 id="Dynamic_Blocks"><A name="sec-3-3" id="sec-3-3"></A>Dynamic Blocks</H3>
+<DIV class="outline-text-3" id="text-Dynamic_Blocks">
+<P>   Pattern for dynamic blocks is: </P>
+<PRE class="example">#+BEGIN: NAME PARAMETERS
+CONTENTS
+#+END:
+</PRE>
+<P>   NAME cannot contain any whitespace character. </P>
+<P>   PARAMETERS can contain any character and can be omitted. </P></DIV></DIV>
+<DIV class="outline-3" id="outline-container-Footnote_Definitions">
+<H3 id="Footnote_Definitions"><A name="sec-3-4" id="sec-3-4"></A>Footnote 
+Definitions</H3>
+<DIV class="outline-text-3" id="text-Footnote_Definitions">
+<P>   Pattern for footnote definitions is: </P>
+<PRE class="example">[LABEL] CONTENTS
+</PRE>
+<P>   It must start at column 0. </P>
+<P>   LABEL is either a number or follows the pattern "fn:WORD", where   word 
+can contain any word-constituent character, hyphens and   underscore characters. 
+</P>
+<P><A href="http://orgmode.org/worg/dev/org-syntax.html#CONTENTS">CONTENTS</A> 
+can contain any element excepted another footnote   definition.  It ends at the 
+next footnote definition, the next   headline, two consecutive empty lines or 
+the end of buffer. </P></DIV></DIV>
+<DIV class="outline-3" id="outline-container-Inlinetasks">
+<H3 id="Inlinetasks"><A name="sec-3-5" id="sec-3-5"></A>Inlinetasks</H3>
+<DIV class="outline-text-3" id="text-Inlinetasks">
+<P>   Inlinetasks are defined by <CODE>org-inlinetask-min-level</CODE> 
+contiguous   asterisk characters starting at column 0, followed by a whitespace  
+ character. </P>
+<P>   Optionally, inlinetasks can be ended with a string constituted of    
+<CODE>org-inlinetask-min-level</CODE> contiguous asterisk characters starting   
+at column 0, followed by a space and the "END" string. </P>
+<P>   Inlinetasks are recognized only after <CODE>org-inlinetask</CODE> library 
+is   loaded. </P></DIV></DIV>
+<DIV class="outline-3" id="outline-container-Plain_Lists_and_Items">
+<H3 id="Plain_Lists_and_Items"><A name="sec-3-6" id="sec-3-6"></A>Plain Lists 
+and Items</H3>
+<DIV class="outline-text-3" id="text-Plain_Lists_and_Items">
+<P>   Items are defined by a line starting with the following pattern:   "BULLET 
+COUNTER-SET CHECK-BOX TAG", in which only BULLET is   mandatory. </P>
+<P>   BULLET is either an asterisk, a hyphen, a plus sign character or   follows 
+either the pattern "COUNTER." or "COUNTER)".  In any case,   BULLET is follwed 
+by a whitespace character or line ending. </P>
+<P>   COUNTER can be a number or a single letter. </P>
+<P>   COUNTER-SET follows the pattern [@COUNTER]. </P>
+<P>   CHECK-BOX is either a single whitespace character, a "X" character   or a 
+hyphen, enclosed within square brackets. </P>
+<P>   TAG follows "TAG-TEXT ::" pattern, where TAG-TEXT can contain any   
+character but a new line. </P>
+<P>   An item ends before the next item, the first line less or equally   
+indented than its starting line, or two consecutive empty lines.   Indentation 
+of lines within other greater elements do not count,   neither do inlinetasks 
+boundaries. </P>
+<P>   A plain list is a set of consecutive items of the same indentation.   It 
+can only directly contain items. </P>
+<P>   If first item in a plain list has a counter in its bullet, the   plain 
+list will be an "ordered plain-list".  If it contains a tag,   it will be a 
+"descriptive list".  Otherwise, it will be an   "unordered list".  List types 
+are mutually exclusive. </P>
+<P>   For example, consider the following excerpt of an Org document: </P>
+<PRE class="example">1. item 1
+2. [X] item 2
+   - some tag :: item 2.1
+</PRE>
+<P>   Its internal structure is as follows: </P>
+<PRE class="example">(ordered-plain-list
+ (item)
+ (item
+  (descriptive-plain-list
+   (item))))
+</PRE></DIV></DIV>
+<DIV class="outline-3" id="outline-container-Tables">
+<H3 id="Tables"><A name="sec-3-7" id="sec-3-7"></A>Tables</H3>
+<DIV class="outline-text-3" id="text-Tables">
+<P>   Tables start at lines beginning with either a vertical bar or the   "+-" 
+string followed by plus or minus signs only, assuming they are   not preceded 
+with lines of the same type.  These lines can be   indented. </P>
+<P>   A table starting with a vertical bar has "org" type.  Otherwise it   has 
+"table.el" type. </P>
+<P>   Org tables end at the first line not starting with a vertical bar.   
+Table.el tables end at the first line not starting with either   a vertical line 
+or a plus sign.  Such lines can be indented. </P>
+<P>   An org table can only contain table rows.  A table.el table does   not 
+contain anything. </P>
+<P>   One or more "#+TBLFM: FORMULAS" lines, where "FORMULAS" can contain   any 
+character, can follow an org table. </P></DIV></DIV></DIV>
+<DIV class="outline-2" id="outline-container-Elements">
+<H2 id="Elements"><A name="sec-4" id="sec-4"></A>Elements</H2>
+<DIV class="outline-text-2" id="text-Elements">
+<P>  Elements cannot contain any other element. </P>
+<P>  Only <A 
+href="http://orgmode.org/worg/dev/org-syntax.html#Keywords">keywords</A> whose 
+name belongs to   <CODE>org-element-document-properties</CODE>, <A href="http://orgmode.org/worg/dev/org-syntax.html#Blocks">verse 
+blocks</A> , <A 
+href="http://orgmode.org/worg/dev/org-syntax.html#Paragraphs">paragraphs</A> and 
+  <A href="http://orgmode.org/worg/dev/org-syntax.html#Table_Rows">table 
+rows</A> can contain objects. </P></DIV>
+<DIV class="outline-3" id="outline-container-Babel_Call">
+<H3 id="Babel_Call"><A name="sec-4-1" id="sec-4-1"></A>Babel Call</H3>
+<DIV class="outline-text-3" id="text-Babel_Call">
+<P>   Pattern for babel calls is: </P>
+<PRE class="example">#+CALL: VALUE
+</PRE>
+<P>   VALUE is optional.  It can contain any character but a new line. 
+</P></DIV></DIV>
+<DIV class="outline-3" id="outline-container-Blocks">
+<H3 id="Blocks"><A name="sec-4-2" id="sec-4-2"></A>Blocks</H3>
+<DIV class="outline-text-3" id="text-Blocks">
+<P>   Like <A 
+href="http://orgmode.org/worg/dev/org-syntax.html#Greater_Blocks">greater 
+blocks</A>, pattern for blocks is: </P>
+<PRE class="example">#+BEGIN_NAME DATA
+CONTENTS
+#+END_NAME
+</PRE>
+<P>   NAME cannot contain any whitespace character. </P>
+<P>   If NAME is "COMMENT", it will be a "comment block".  If it is   "EXAMPLE", 
+it will be an "example block".  If it is "SRC", it will   be a "source block".  
+If it is "VERSE", it will be a "verse block". </P>
+<P>   If NAME is a string matching the name of any export back-end   loaded, the 
+block will be an "export block". </P>
+<P>   DATA can contain any character but a new line.  It can be ommitted,   
+unless the block is a "source block".  In this case, it must follow   the 
+pattern "LANGUAGE SWITCHES ARGUMENTS", where SWITCHES and   ARGUMENTS are 
+optional. </P>
+<P>   LANGUAGE cannot contain any whitespace character. </P>
+<P>   SWITCHES is made of any number of "SWITCH" patterns, separated by   blank 
+lines. </P>
+<P>   A SWITCH pattern is either "-l "FORMAT"", where FORMAT can contain   any 
+character but a double quote and a new line, "-S" or "+S",   where S stands for 
+a single letter. </P>
+<P>   ARGUMENTS can contain any character but a new line. </P>
+<P><A href="http://orgmode.org/worg/dev/org-syntax.html#CONTENTS">CONTENTS</A> 
+can contain any character, including new lines.  Though it   will only contain 
+Org objects if the block is a verse block.   Otherwise, <A href="http://orgmode.org/worg/dev/org-syntax.html#contents">contents</A> 
+will not be parsed. </P></DIV></DIV>
+<DIV class="outline-3" id="outline-container-Clock-_Diary_Sexp_and_Planning">
+<H3 id="Clock-_Diary_Sexp_and_Planning"><A name="sec-4-3" 
+id="sec-4-3"></A>Clock, Diary Sexp and Planning</H3>
+<DIV class="outline-text-3" id="text-Clock-_Diary_Sexp_and_Planning">
+<P>   A clock follows the pattern: </P>
+<PRE class="example">CLOCK: TIMESTAMP DURATION
+</PRE>
+<P>   Both TIMESTAMP and DURATION are optional. </P>
+<P>   TIMESTAMP is a <A href="http://orgmode.org/worg/dev/org-syntax.html#Timestamp">timestamp</A> 
+object. </P>
+<P>   DURATION follows the pattern: </P>
+<PRE class="example">=&gt; HH:MM
+</PRE>
+<P>   HH is a number containing any number of digits.  MM is a two digit   
+numbers. </P>
+<P>   A diary sexp is a line starting at column 0 with "%%(" string.  It   can 
+then contain any character besides a new line. </P>
+<P>   A planning is a line filled with more at most three INFO parts,   where 
+each INFO part follows the pattern: </P>
+<PRE class="example">KEYWORD: TIMESTAMP
+</PRE>
+<P>   KEYWORD is a string among <CODE>org-deadline-string</CODE>,    
+<CODE>org-scheduled-string</CODE> and <CODE>org-closed-string</CODE>.  TIMESTAMP 
+is is   a <A 
+href="http://orgmode.org/worg/dev/org-syntax.html#Timestamp">timestamp</A> 
+object. </P>
+<P>   Even though a planning element can exist anywhere in a section or   a 
+greater element, it will only affect the headline containing the   section if it 
+is put on the line following that headline. </P></DIV></DIV>
+<DIV class="outline-3" id="outline-container-Comments">
+<H3 id="Comments"><A name="sec-4-4" id="sec-4-4"></A>Comments</H3>
+<DIV class="outline-text-3" id="text-Comments">
+<P>   A "comment line" starts with a hash signe and a whitespace   character or 
+an end of line. </P>
+<P>   Comments can contain any number of consecutive comment lines. 
+</P></DIV></DIV>
+<DIV class="outline-3" id="outline-container-Fixed_Width_Areas">
+<H3 id="Fixed_Width_Areas"><A name="sec-4-5" id="sec-4-5"></A>Fixed Width 
+Areas</H3>
+<DIV class="outline-text-3" id="text-Fixed_Width_Areas">
+<P>   A "fixed-width line" start with a colon character and a whitespace   or an 
+end of line. </P>
+<P>   Fixed width areas can contain any number of consecutive fixed-width   
+lines. </P></DIV></DIV>
+<DIV class="outline-3" id="outline-container-Horizontal_Rules">
+<H3 id="Horizontal_Rules"><A name="sec-4-6" id="sec-4-6"></A>Horizontal 
+Rules</H3>
+<DIV class="outline-text-3" id="text-Horizontal_Rules">
+<P>   A horizontal rule is a line made of at least 5 consecutive hyphens.   It 
+can be indented. </P></DIV></DIV>
+<DIV class="outline-3" id="outline-container-Keywords">
+<H3 id="Keywords"><A name="sec-4-7" id="sec-4-7"></A>Keywords</H3>
+<DIV class="outline-text-3" id="text-Keywords">
+<P>   Keywords follow the syntax: </P>
+<PRE class="example">#+KEY: VALUE
+</PRE>
+<P>   KEY can contain any non-whitespace character, but it cannot be   equal to 
+"CALL" or any affiliated keyword. </P>
+<P>   VALUE can contain any character excepted a new line. </P>
+<P>   If KEY belongs to <CODE>org-element-document-properties</CODE>, VALUE can  
+ contain objects. </P></DIV></DIV>
+<DIV class="outline-3" id="outline-container-LaTeX_Environments">
+<H3 id="LaTeX_Environments"><A name="sec-4-8" id="sec-4-8"></A>LaTeX 
+Environments</H3>
+<DIV class="outline-text-3" id="text-LaTeX_Environments">
+<P>   Pattern for LaTeX environments is: </P>
+<PRE class="example">\begin{NAME}
+CONTENTS
+\end{NAME}
+</PRE>
+<P>   NAME is constituted of alpha-numeric characters and may end with an   
+asterisk. </P>
+<P><A href="http://orgmode.org/worg/dev/org-syntax.html#CONTENTS">CONTENTS</A> 
+can contain anything but the "\end{NAME}" string. </P></DIV></DIV>
+<DIV class="outline-3" id="outline-container-Node_Properties">
+<H3 id="Node_Properties"><A name="sec-4-9" id="sec-4-9"></A>Node Properties</H3>
+<DIV class="outline-text-3" id="text-Node_Properties">
+<P>   Patter for node properties is: </P>
+<PRE class="example">:PROPERTY: VALUE
+</PRE>
+<P>   PROPERTY can contain any non-whitespace character.  VALUE can   contain 
+any character but a new line. </P>
+<P>   Node properties can only exist in a <A href="http://orgmode.org/worg/dev/org-syntax.html#Drawers_and_Property_Drawers">property 
+drawers</A>. </P></DIV></DIV>
+<DIV class="outline-3" id="outline-container-Paragraphs">
+<H3 id="Paragraphs"><A name="sec-4-10" id="sec-4-10"></A>Paragraphs</H3>
+<DIV class="outline-text-3" id="text-Paragraphs">
+<P>   Paragraphs are the default element, which means that any   unrecognized 
+context is a paragraph. </P>
+<P>   Empty lines and other elements end paragraphs. </P>
+<P>   Paragraphs can contain every type of object. </P></DIV></DIV>
+<DIV class="outline-3" id="outline-container-Table_Rows">
+<H3 id="Table_Rows"><A name="sec-4-11" id="sec-4-11"></A>Table Rows</H3>
+<DIV class="outline-text-3" id="text-Table_Rows">
+<P>   A table rows is either constituted of a vertical bar and any number   of 
+<A href="http://orgmode.org/worg/dev/org-syntax.html#Table_Cells">table 
+cells</A> or a vertical bar followed by a hyphen. </P>
+<P>   In the first case the table row has the "standard" type.  In the   second 
+case, it has the "rule" type. </P>
+<P>   Table rows can only exist in <A href="http://orgmode.org/worg/dev/org-syntax.html#Tables">tables</A>. 
+</P></DIV></DIV></DIV>
+<DIV class="outline-2" id="outline-container-Objects">
+<H2 id="Objects"><A name="sec-5" id="sec-5"></A>Objects</H2>
+<DIV class="outline-text-2" id="text-Objects">
+<P>  Objects can only be found in the following locations: </P>
+<UL>
+  <LI><A 
+  href="http://orgmode.org/worg/dev/org-syntax.html#Affiliated_keywords">affiliated 
+  keywords</A> defined in <CODE>org-element-parsed-keywords</CODE>, </LI>
+  <LI><A href="http://orgmode.org/worg/dev/org-syntax.html#Keywords">document 
+  properties</A>, </LI>
+  <LI><A href="http://orgmode.org/worg/dev/org-syntax.html#Headlines_and_Sections">headline</A> 
+  titles, </LI>
+  <LI><A 
+  href="http://orgmode.org/worg/dev/org-syntax.html#Inlinetasks">inlinetask</A> 
+  titles, </LI>
+  <LI><A href="http://orgmode.org/worg/dev/org-syntax.html#Plain_Lists_and_Items">item</A> 
+  tags, </LI>
+  <LI><A 
+  href="http://orgmode.org/worg/dev/org-syntax.html#Paragraphs">paragraphs</A>, 
+  </LI>
+  <LI><A href="http://orgmode.org/worg/dev/org-syntax.html#Table_Cells">table 
+  cells</A>, </LI>
+  <LI><A href="http://orgmode.org/worg/dev/org-syntax.html#Table_Rows">table 
+  rows</A>, which can only contain table cell    objects, </LI>
+  <LI><A href="http://orgmode.org/worg/dev/org-syntax.html#Blocks">verse 
+  blocks</A>. </LI></UL>
+<P>      Most objects cannot contain objects.  Those which can will be  
+specified. </P></DIV>
+<DIV class="outline-3" id="outline-container-Entities_and_LaTeX_Fragments">
+<H3 id="Entities_and_LaTeX_Fragments"><A name="sec-5-1" 
+id="sec-5-1"></A>Entities and LaTeX Fragments</H3>
+<DIV class="outline-text-3" id="text-Entities_and_LaTeX_Fragments">
+<P>   An entity follows the pattern: </P>
+<PRE class="example">\NAME POST
+</PRE>
+<P>   where NAME has a valid association in either <CODE>org-entities</CODE> or  
+  <CODE>org-entities-user</CODE>. </P>
+<P>   POST is the end of line, "{}" string, or a non-alphabetical   character.  
+It isn't separated from NAME by a whitespace character. </P>
+<P>   A LaTeX fragment can follow multiple patterns: </P>
+<PRE class="example">\NAME POST
+\(CONTENTS\)
+\[CONTENTS\]
+$$CONTENTS$$
+PRE$CHAR$POST
+PRE$BORDER1 BODY BORDER2$
+</PRE>
+<P>   NAME contains alphabetical characters only and must not have an   
+association in either <CODE>org-entities</CODE> or 
+<CODE>org-entities-user</CODE>. </P>
+<P>   POST is the same as for entities. </P>
+<P><A href="http://orgmode.org/worg/dev/org-syntax.html#CONTENTS">CONTENTS</A> 
+can contain any character but cannot contain "\)" in the   second template or 
+"\]" in the third one. </P>
+<P>   PRE is either the beginning of line or a character different from    
+<CODE>$</CODE>. </P>
+<P>   CHAR is a non-whitespace character different from <CODE>.</CODE>, ~,~, 
+<CODE>?</CODE>,    <CODE>;</CODE>, ~'~ or a double quote. </P>
+<P>   POST is any of <CODE>-</CODE>, <CODE>.</CODE>, ~,~, <CODE>?</CODE>, 
+<CODE>;</CODE>, <CODE>:</CODE>, ~'~, a double quote,   a whitespace character 
+and the end of line. </P>
+<P>   BORDER1 is a non-whitespace character different from <CODE>.</CODE>, 
+<CODE>;</CODE>, <CODE>.</CODE>   and <CODE>$</CODE>. </P>
+<P>   BODY can contain any character excepted <CODE>$</CODE>, and may not span 
+over   more than 3 lines. </P>
+<P>   BORDER2 is any non-whitespace character different from ~,~, <CODE>.</CODE> 
+and    <CODE>$</CODE>. </P>
+<HR>
+
+<BLOCKQUOTE>
+  <P>It would introduce incompatibilities with previous Org versions, but 
+  support for <CODE>$...$</CODE> (and for symmetry, <CODE>$$...$$</CODE>) 
+  constructs ought to be removed. </P>
+  <P>They are slow to parse, fragile, redundant and imply false positives.  — 
+  ngz </P></BLOCKQUOTE></DIV></DIV>
+<DIV class="outline-3" id="outline-container-Export_Snippets">
+<H3 id="Export_Snippets"><A name="sec-5-2" id="sec-5-2"></A>Export Snippets</H3>
+<DIV class="outline-text-3" id="text-Export_Snippets">
+<P>   Patter for export snippets is: </P>
+<PRE class="example">@@NAME:VALUE@@
+</PRE>
+<P>   NAME can contain any alpha-numeric character and hyphens. </P>
+<P>   VALUE can contain anything but "@@" string. </P></DIV></DIV>
+<DIV class="outline-3" id="outline-container-Footnote_References">
+<H3 id="Footnote_References"><A name="sec-5-3" id="sec-5-3"></A>Footnote 
+References</H3>
+<DIV class="outline-text-3" id="text-Footnote_References">
+<P>   There are four patterns for footnote references: </P>
+<PRE class="example">[MARK]
+[fn:LABEL]
+[fn:LABEL:DEFINITION]
+[fn::DEFINITION]
+</PRE>
+<P>   MARK is a number. </P>
+<P>   LABEL can contain any word constituent character, hyphens and   
+underscores. </P>
+<P>   DEFINITION can contain any character.  Though opening and closing   square 
+brackets must be balanced in it.  It can contain any object   encountered in a 
+paragraph, even other footnote references. </P>
+<P>   If the reference follows the third pattern, it is called an "inline   
+footnote".  If it follows the fourth one, i.e. if LABEL is omitted,   it is an 
+"anonymous footnote". </P></DIV></DIV>
+<DIV class="outline-3" id="outline-container-Inline_Babel_Calls_and_Source_Blocks">
+<H3 id="Inline_Babel_Calls_and_Source_Blocks"><A name="sec-5-4" 
+id="sec-5-4"></A>Inline Babel Calls and Source Blocks</H3>
+<DIV class="outline-text-3" id="text-Inline_Babel_Calls_and_Source_Blocks">
+<P>   Inline Babel calls follow any of the following patterns: </P>
+<PRE class="example">call_NAME(ARGUMENTS)
+call_NAME[HEADER](ARGUMENTS)[HEADER]
+</PRE>
+<P>   NAME can contain any character besides <CODE>(</CODE>, <CODE>)</CODE> and 
+"\n". </P>
+<P>   HEADER can contain any character besides <CODE>]</CODE> and "\n". </P>
+<P>   ARGUMENTS can contain any character besides <CODE>)</CODE> and "\n". </P>
+<P>   Inline source blocks follow any of the following patterns: </P>
+<PRE class="example">src_LANG{BODY}
+src_LANG[OPTIONS]{BODY}
+</PRE>
+<P>   LANG can contain any non-whitespace character. </P>
+<P>   OPTIONS and BODY can contain any character but "\n". </P></DIV></DIV>
+<DIV class="outline-3" id="outline-container-Line_Breaks">
+<H3 id="Line_Breaks"><A name="sec-5-5" id="sec-5-5"></A>Line Breaks</H3>
+<DIV class="outline-text-3" id="text-Line_Breaks">
+<P>   A line break consists in "\\SPACE" pattern at the end of an   otherwise 
+non-empty line. </P>
+<P>   SPACE can contain any number of tabs and spaces, including 0. 
+</P></DIV></DIV>
+<DIV class="outline-3" id="outline-container-Links">
+<H3 id="Links"><A name="sec-5-6" id="sec-5-6"></A>Links</H3>
+<DIV class="outline-text-3" id="text-Links">
+<P>   There are 4 major types of links: </P>
+<PRE class="example">RADIO                     ("radio" link)
+&lt;PROTOCOL:PATH&gt;           ("angle" link)
+PRE PROTOCOL:PATH2 POST   ("plain" link)
+[[PATH3]DESCRIPTION]      ("regular" link)
+</PRE>
+<P>   RADIO is a string matched by some <A href="http://orgmode.org/worg/dev/org-syntax.html#Targets_and_Radio_Targets">radio 
+target</A>.  It can contain    <A href="http://orgmode.org/worg/dev/org-syntax.html#Entities_and_LaTeX_Fragments">entities</A>, 
+<A href="http://orgmode.org/worg/dev/org-syntax.html#Entities_and_LaTeX_Fragments">latex 
+fragments</A>, <A href="http://orgmode.org/worg/dev/org-syntax.html#Subscript_and_Superscript">subscript</A> 
+and <A href="http://orgmode.org/worg/dev/org-syntax.html#Subscript_and_Superscript">superscript</A> 
+only. </P>
+<P>   PROTOCOL is a string among <CODE>org-link-types</CODE>. </P>
+<P>   PATH can contain any character but <CODE>]</CODE>, <CODE>&lt;</CODE>, 
+<CODE>&gt;</CODE> and <CODE>\n</CODE>. </P>
+<P>   PRE and POST are non word constituent.  They can be, respectively,   the 
+beginning or the end of a line. </P>
+<P>   PATH2 can contain any non-whitespace character excepted <CODE>(</CODE>, 
+<CODE>)</CODE>,    <CODE>&lt;</CODE> and <CODE>&gt;</CODE>.  It must end with a 
+word-constituent character, or any   non-whitespace non-punctuation character 
+followed by <CODE>/</CODE>. </P>
+<P>   DESCRIPTION must be enclosed within square brackets.  It can   contain any 
+character but square brackets.  Object-wise, it can   contain any object found 
+in a paragraph excepted a <A href="http://orgmode.org/worg/dev/org-syntax.html#Footnote_References">footnote 
+reference</A>, a <A href="http://orgmode.org/worg/dev/org-syntax.html#Targets_and_Radio_Targets">radio 
+target</A> and a <A href="http://orgmode.org/worg/dev/org-syntax.html#Line_Breaks">line 
+break</A>.  It cannot contain   another link either, unless it is a plain link. 
+</P>
+<P>   DESCRIPTION is optional. </P>
+<P>   PATH3 is built according to the following patterns: </P>
+<PRE class="example">FILENAME           ("file" type)
+PROTOCOL:PATH4     ("PROTOCOL" type)
+id:ID              ("id" type)
+#CUSTOM-ID         ("custom-id" type)
+(CODEREF)          ("coderef" type)
+FUZZY              ("fuzzy" type)
+</PRE>
+<P>   FILENAME is a file name, either absolute or relative. </P>
+<P>   PATH4 can contain any character besides square brackets. </P>
+<P>   ID is constituted of hexadecimal numbers separated with hyphens. </P>
+<P>   PATH4, CUSTOM-ID, CODEREF and FUZZY can contain any character   besides 
+square brackets. </P>
+<HR>
+
+<BLOCKQUOTE>
+  <P>I suggest to remove angle links.  If one needs spaces in PATH, she can use 
+  standard link syntax instead. </P>
+  <P>I also suggest to remove <CODE>org-link-types</CODE> dependency in PROTOCOL
+   and match <CODE>[a-zA-Z]</CODE> instead, for portability.  — ngz 
+</P></BLOCKQUOTE></DIV></DIV>
+<DIV class="outline-3" id="outline-container-Macros">
+<H3 id="Macros"><A name="sec-5-7" id="sec-5-7"></A>Macros</H3>
+<DIV class="outline-text-3" id="text-Macros">
+<P>   Macros follow the pattern: </P>
+<PRE class="example">{{{NAME(ARGUMENTS)}}}
+</PRE>
+<P>   NAME must start with a letter and can be followed by any number of   
+alpha-numeric characters, hyphens and underscores. </P>
+<P>   ARGUMENTS can contain anything but "}}}" string.  Values within   
+ARGUMENTS are separated by commas.  Non-separating commas have to   be escaped 
+with a backslash character. </P></DIV></DIV>
+<DIV class="outline-3" id="outline-container-Targets_and_Radio_Targets">
+<H3 id="Targets_and_Radio_Targets"><A name="sec-5-8" id="sec-5-8"></A>Targets 
+and Radio Targets</H3>
+<DIV class="outline-text-3" id="text-Targets_and_Radio_Targets">
+<P>   Radio targets follow the pattern: </P>
+<PRE class="example">&lt;&lt;&lt;CONTENTS&gt;&gt;&gt;
+</PRE>
+<P><A href="http://orgmode.org/worg/dev/org-syntax.html#CONTENTS">CONTENTS</A> 
+can be any character besides <CODE>&lt;</CODE>, <CODE>&gt;</CODE> and "\n".  As 
+far as   objects go, it can contain <A href="http://orgmode.org/worg/dev/org-syntax.html#Entities_and_LaTeX_Fragments">entities</A>, 
+<A href="http://orgmode.org/worg/dev/org-syntax.html#Entities_and_LaTeX_Fragments">latex 
+fragments</A>, <A href="http://orgmode.org/worg/dev/org-syntax.html#Subscript_and_Superscript">subscript</A> 
+and    <A href="http://orgmode.org/worg/dev/org-syntax.html#Subscript_and_Superscript">superscript</A> 
+only. </P>
+<P>   Targets follow the pattern: </P>
+<PRE class="example">&lt;&lt;TARGET&gt;&gt;
+</PRE>
+<P>   TARGET can contain any character besides <CODE>&lt;</CODE>, 
+<CODE>&gt;</CODE> and "\n".  It   cannot contain any object. </P></DIV></DIV>
+<DIV class="outline-3" id="outline-container-Statistics_Cookies">
+<H3 id="Statistics_Cookies"><A name="sec-5-9" id="sec-5-9"></A>Statistics 
+Cookies</H3>
+<DIV class="outline-text-3" id="text-Statistics_Cookies">
+<P>   Statistics cookies follow either pattern: </P>
+<PRE class="example">[PERCENT%]
+[NUM1/NUM2]
+</PRE>
+<P>   PERCENT, NUM1 and NUM2 are numbers or the empty string. </P></DIV></DIV>
+<DIV class="outline-3" id="outline-container-Subscript_and_Superscript">
+<H3 id="Subscript_and_Superscript"><A name="sec-5-10" 
+id="sec-5-10"></A>Subscript and Superscript</H3>
+<DIV class="outline-text-3" id="text-Subscript_and_Superscript">
+<P>   Pattern for subscript is: </P>
+<PRE class="example">CHAR_SCRIPT
+</PRE>
+<P>   Pattern for superscript is: </P>
+<PRE class="example">CHAR^SCRIPT
+</PRE>
+<P>   CHAR is any non-whitespace character. </P>
+<P>   SCRIPT can be <CODE>*</CODE>, a string made of word-constituent characters 
+  maybe preceded by a plus or a minus sign, an expression enclosed in   
+parenthesis (resp. curly brackets) containing balanced parenthesis   (resp. 
+curly brackets). </P></DIV></DIV>
+<DIV class="outline-3" id="outline-container-Table_Cells">
+<H3 id="Table_Cells"><A name="sec-5-11" id="sec-5-11"></A>Table Cells</H3>
+<DIV class="outline-text-3" id="text-Table_Cells">
+<P>   Table cells follow the pattern: </P>
+<PRE class="example">CONTENTS|
+</PRE>
+<P><A href="http://orgmode.org/worg/dev/org-syntax.html#CONTENTS">CONTENTS</A> 
+can contain any character excepted a vertical bar. </P></DIV></DIV>
+<DIV class="outline-3" id="outline-container-Timestamp">
+<H3 id="Timestamp"><A name="sec-5-12" id="sec-5-12"></A>Timestamps</H3>
+<DIV class="outline-text-3" id="text-Timestamp">
+<P>   There are seven possible patterns for timestamps: </P>
+<PRE class="example">&lt;%%(SEXP)&gt;                                     (diary)
+&lt;DATE TIME REPEATER&gt;                         (active)
+[DATE TIME REPEATER]                         (inactive)
+&lt;DATE TIME REPEATER&gt;--&lt;DATE TIME REPEATER&gt;   (active range)
+&lt;DATE TIME-TIME REPEATER&gt;                    (active range)
+[DATE TIME REPEATER]--[DATE TIME REPEATER]   (inactive range)
+[DATE TIME-TIME REPEATER]                    (inactive range)
+</PRE>
+<P>   SEXP can contain any character excepted <CODE>&gt;</CODE> and 
+<CODE>\n</CODE>. </P>
+<P>   DATE follows the pattern: </P>
+<PRE class="example">YYYY-MM-DD DAYNAME
+</PRE>
+<P>   Y, M and D are digits.  DAYNAME can contain any non   whitespace-character 
+besides <CODE>+</CODE>, <CODE>-</CODE>, <CODE>]</CODE>, <CODE>&gt;</CODE>, a 
+digit or <CODE>\n</CODE>. </P>
+<P>   TIME follows the pattern =H:MM~.  H can be one or two digit long   and can 
+start with 0. </P>
+<P>   REPEATER follows the patter: </P>
+<PRE class="example">MARK VALUE UNIT
+</PRE>
+<P>   MARK is <CODE>+</CODE> (cumulate type), <CODE>++</CODE> (catch-up type) or 
+<CODE>.+</CODE> (restart   type). </P>
+<P>   VALUE is a number. </P>
+<P>   UNIT is a character among <CODE>h</CODE> (hour), <CODE>d</CODE> (day), 
+<CODE>w</CODE> (week), <CODE>m</CODE>   (month), <CODE>y</CODE> (year). </P>
+<P>   MARK, VALUE and UNIT are not separated by whitespace characters. 
+</P></DIV></DIV>
+<DIV class="outline-3" id="outline-container-Emphasis_Markers">
+<H3 id="Emphasis_Markers"><A name="sec-5-13" id="sec-5-13"></A>Text Markup</H3>
+<DIV class="outline-text-3" id="text-Emphasis_Markers">
+<P>   Text markup follows the pattern: </P>
+<PRE class="example">PRE MARKER CONTENTS MARKER POST
+</PRE>
+<P>   PRE is a whitespace character, <CODE>(</CODE>, <CODE>{</CODE> ~'~ or a 
+double quote.  It   can also be a beginning of line. </P>
+<P>   MARKER is a character among <CODE>*</CODE> (bold), <CODE>=</CODE> 
+(verbatim), <CODE>/</CODE>   (italic), <CODE>+</CODE> (strike-through), 
+<CODE>_</CODE> (underline), ~~~ (code). </P>
+<P><A href="http://orgmode.org/worg/dev/org-syntax.html#CONTENTS">CONTENTS</A> 
+is a string following the pattern: </P>
+<PRE class="example">BORDER BODY BORDER
+</PRE>
+<P>   BORDER can be any non-whitespace character excepted ~,~, ~'~ or   a double 
+quote. </P>
+<P>   BODY can contain contain any character but may not span over more   than 3 
+lines. </P>
+<P>   BORDER and BODY are not separated by whitespaces. </P>
+<P><A href="http://orgmode.org/worg/dev/org-syntax.html#CONTENTS">CONTENTS</A> 
+can contain any object encountered in a paragraph when   markup is "bold", 
+"italic", "strike-through" or "underline". </P>
+<P>   POST is a whitespace character, <CODE>-</CODE>, <CODE>.</CODE>, ~,~, 
+<CODE>:</CODE>, <CODE>!</CODE>, <CODE>?</CODE>, ~'~,    <CODE>)</CODE>, 
+<CODE>}</CODE> or a double quote.  It can also be an end of line. </P>
+<P>   PRE, MARKER, <A href="http://orgmode.org/worg/dev/org-syntax.html#CONTENTS">CONTENTS</A>, 
+MARKER and POST are not separated by   whitespace characters. </P>
+<HR>
+
+<BLOCKQUOTE>
+  <P>All of this is wrong if <CODE>org-emphasis-regexp-components</CODE> or 
+  <CODE>org-emphasis-alist</CODE> are modified. </P>
+  <P>This should really be simplified and made persistent (i.e. no defcustom 
+  allowed).  Otherwise, portability and parsing are jokes. </P>
+  <P>Also, <A 
+  href="http://orgmode.org/worg/dev/org-syntax.html#CONTENTS">CONTENTS</A> 
+  should be anything within code and verbatim emphasis, by definition.  — ngz 
+  </P></BLOCKQUOTE>
+<DIV id="footnotes">
+<H2 class="footnotes">Footnotes: </H2>
+<DIV id="text-footnotes">
+<P class="footnote"><SUP><A name="fn-.1" class="footnum" href="http://orgmode.org/worg/dev/org-syntax.html#fnr-.1">1</A></SUP> 
+In particular, the parser requires stars at column 0 to be quoted by a comma 
+when they do not define a headline. </P>
+<P class="footnote"><SUP><A name="fn-.2" class="footnum" href="http://orgmode.org/worg/dev/org-syntax.html#fnr-.2">2</A></SUP> 
+It also means that only headlines and sections can be recognized just by looking 
+at the beginning of the line. </P></DIV></DIV></DIV></DIV></DIV></DIV>
+<DIV id="postamble">
+<DIV id="show_source"><INPUT onclick="show_org_source()" type="button" value="Show Org source"></DIV>
+<DIV id="license">
+<P>Documentation from the http://orgmode.org/worg/ website (either in its HTML 
+format or in its Org format) is licensed under the <A href="http://www.gnu.org/copyleft/fdl.html">GNU 
+Free Documentation License version 1.3</A> or later.  The code examples and css 
+stylesheets are licensed under the <A href="http://www.gnu.org/licenses/gpl.html">GNU 
+General Public License v3</A> or later.</P></DIV></DIV></BODY></HTML>
