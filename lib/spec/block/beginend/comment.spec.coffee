@@ -1,10 +1,8 @@
 require 'jasmine-matchers'
-_ = require 'lodash'
+_       = require 'lodash'
+Section = require '../../../src/block/section'
 
 Comment = require '../../../src/block/beginend/comment'
-Section = require '../../../src/block/section'
-Lines   = require '../../../src/block/lines'
-Org     = require '../../../src/core'
 
 describe 'Comment', ->
   it 'should work with a 2-line comment', ->
@@ -14,8 +12,7 @@ describe 'Comment', ->
     a comment
     #+END_COMMENT
     """
-    sect = new Section new Org, null
-    sect.consume(new Lines txt)
+    sect = Section.parse(txt)
     expect(sect.content.children().length).toBe 1
     comment = sect.content.children()[0]
     expect(comment.type).toBe 'comment'
