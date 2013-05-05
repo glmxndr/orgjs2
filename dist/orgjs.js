@@ -1,28 +1,562 @@
 ;(function(e,t,n){function i(n,s){if(!t[n]){if(!e[n]){var o=typeof require=="function"&&require;if(!s&&o)return o(n,!0);if(r)return r(n,!0);throw new Error("Cannot find module '"+n+"'")}var u=t[n]={exports:{}};e[n][0].call(u.exports,function(t){var r=e[n][1][t];return i(r?r:t)},u,u.exports)}return t[n].exports}var r=typeof require=="function"&&require;for(var s=0;s<n.length;s++)i(n[s]);return i})({1:[function(require,module,exports){
+var _U       = require('./utils');
+var Config   = require('./config');
+var Headline = require('./block/headline');
+var Document = require('./document');
+var Inline   = require('./inline/inline');
 
-(function(){
+var Org = function (obj) {
+  obj = obj || {};
+  this.config = Config.prepare(obj);
 
-  var _U = require('./utils');
-  var Document = require('./block/document');
+  this.parse = {
+    headline: Headline.parser(this),
+    document: Document.parser(this)
+  };
 
-  console.log(_U);
+};
 
-})();
-},{"./utils":2,"./block/document":3}],3:[function(require,module,exports){
-require('../shim');
-var TreeNode = require('../tree');
+// Exposing components 
+// (and forcing them to load, so that they can plug themselves).
+Org.components = {
+  Document      : require('./document'),
+  block: {
+    Section       : require('./block/section'),
+    CommentLine   : require('./block/special/commentline'),
+    HorizontalRule: require('./block/special/hr'),
+    FootnoteDef   : require('./block/special/footnotedef'),
+    Example       : require('./block/beginend/example'),
+    Quote         : require('./block/beginend/quote'),
+    Comment       : require('./block/beginend/comment'),
+    Verse         : require('./block/beginend/verse'),
+    Src           : require('./block/beginend/src'),
+    Ulist         : require('./block/lists/ulist'),
+    UlItem        : require('./block/lists/ulitem'),
+    Olist         : require('./block/lists/olist'),
+    OlItem        : require('./block/lists/olitem'),
+    Dlist         : require('./block/lists/dlist'),
+    DlItem        : require('./block/lists/dlitem'),
+    Drawer        : require('./block/special/drawer'),
+    Para          : require('./block/para')
+  },
+  inline: {
 
+  }
+};
 
-var Document = function (params) {
-  // A document is the root element of a tree
-  TreeNode.apply(this, [null, params]);
-  this.properties = {};
-  this.footnotes = {};
-  
+module.exports = exports = Org;
+},{"./utils":2,"./config":3,"./block/headline":4,"./document":5,"./inline/inline":6,"./block/section":7,"./block/special/commentline":8,"./block/special/hr":9,"./block/special/footnotedef":10,"./block/beginend/example":11,"./block/beginend/quote":12,"./block/beginend/comment":13,"./block/beginend/verse":14,"./block/beginend/src":15,"./block/lists/ulist":16,"./block/lists/ulitem":17,"./block/lists/olist":18,"./block/lists/olitem":19,"./block/lists/dlist":20,"./block/lists/dlitem":21,"./block/special/drawer":22,"./block/para":23}],5:[function(require,module,exports){
+var _U      = require('./utils');
+var Org     = require('./core');
+var Block   = require('./block/block');
+var Section = require('./block/section');
+var Config  = require('./config');
+var Lines   = require('./block/lines');
+
+var Document = Block.define({
+  parent: Section,
+  type: 'document',
+  methods: {
+    init: function () {
+      this.fnByNum  = [];
+    },
+    declareFootnote: (function () {
+      var fnCpt = 0;
+      return function (fndef) {
+        this.fnByNum[++fnCpt] = fndef;
+        fndef.number = this.fnByNum.length;
+      };
+    }())
+  }
+});
+
+Document.includes = function (txt, basepath) {
+  // TODO: treat includes.
+  return txt;
+};
+
+Document.parser = function (org) {
+  org = org || new Org();
+  var conf = org.conf || Config.defaults;
+  var numspace = +conf.get('tabSize');
+  var tabspace = _U.repeat(' ', numspace);
+  return function (txt) {
+    txt = txt.replace(/\t/g, tabspace);
+    txt = Document.includes(txt);
+    var d = new Document(org, null);
+    d.consume(new Lines(txt));  
+    return d;
+  };
 };
 
 module.exports = exports = Document;
-},{"../shim":4,"../tree":5}],4:[function(require,module,exports){
+},{"./utils":2,"./core":1,"./block/block":24,"./block/section":7,"./config":3,"./block/lines":25}],4:[function(require,module,exports){
+var _U     = require('../utils');
+var Config = require('../config');
+var Org    = require('../core');
+
+var Headline = function (matcher) {
+  this.stars = matcher[1];
+  this.level = this.stars.length;
+  this.todo  = matcher[2];
+  this.priority = matcher[3];
+  this.title = matcher[4];
+  this.tags = matcher[5] ? matcher[5].split(/:/) : [];
+};
+
+Headline.parser = function (org) {
+  org = org || new Org();
+  var config = org.config || Config.defaults;
+  
+  var todos = config.headlineTodos;
+  var priorities = config.headlinePriorities;
+
+  // Build the regexp
+  var str = "(\\**)%s+";
+  str += "(?:(%TODOS)%s+)?";
+  str += "(?:\\[\\#(%PRIORITIES)\\]%s+)?";
+  str += "(.*?)%s*";
+  str += "(?:%s+:([A-Za-z0-9:]+):%s*)?";
+  str += "(?:\n|$)";
+
+  str = str.replace(/%TODOS/, todos.join('|'));
+  str = str.replace(/%PRIORITIES/, priorities.join('|'));
+  str = str.replace(/%s/g, '[ \\t]');
+
+  var rgxp = RegExp(str);
+
+  return function (line) {
+    var matcher = rgxp.exec(line);
+    return matcher ? new Headline(matcher) : null;
+  };
+};
+
+module.exports = exports = Headline;
+},{"../utils":2,"../config":3,"../core":1}],6:[function(require,module,exports){
+var _U = require('../utils');
+
+var Inline = function (text) {
+};
+
+Inline.parser = function (conf) {
+
+};
+
+module.exports = exports = Inline;
+},{"../utils":2}],23:[function(require,module,exports){
+var _U      = require('../utils');
+var Block   = require('./block');
+var Lines   = require('./lines');
+
+var Para = Block.define({
+  parent: Block,
+  type: "para",
+  registerLevel: "lowest",
+  match: function (lines, parent) {
+    return true;
+  },
+  methods: {
+    init: function () {
+      this.lines = [];
+    },
+    accepts: function (lines) {
+      var line = lines.peak();
+      // Check for empty line
+      if (_U.blank(line)) { return false; }
+
+      // Check for other type of line
+      var testType = _U.ensure(Block.get(lines)).type;
+      if (testType !== "para") { return false; }
+
+      // Check for indentation
+      var indent = _U.indentLevel(line);
+      var parentIndent = this.parentIndent();
+      if (indent === 0 && parentIndent > 0) {return false;}
+      if (indent > 0 && indent < parentIndent) {return false;}
+      return true;
+    },
+    consume: function (lines) {
+      do {
+        this.lines.push(lines.pop());
+      } while (this.accepts(lines));
+      lines.trimBlank();
+    }
+  }
+});
+
+module.exports = exports = Para;
+},{"../utils":2,"./block":24,"./lines":25}],8:[function(require,module,exports){
+var _U      = require('../../utils');
+var Block   = require('../block');
+
+var CommentLine = Block.define({
+  parent: Block,
+  type: "commentline",
+  registerLevel: "high",
+  match: function (lines, parent) {
+    return _U.ensure(_U.peak(lines), '').match(/^\s*#\s/);
+  },
+  methods: {
+    accepts: function (lines) {},
+    consume: function (lines) {
+      this.raw = lines.pop();
+    }
+  }
+});
+
+module.exports = exports = CommentLine;
+},{"../../utils":2,"../block":24}],9:[function(require,module,exports){
+var _U      = require('../../utils');
+var Block   = require('../block');
+
+var CommentLine = Block.define({
+  parent: Block,
+  type: "hr",
+  registerLevel: "high",
+  match: function (lines, parent) {
+    return _U.ensure(_U.peak(lines), '').match(/^\s*-{5,}\s*$/);
+  },
+  methods: {
+    accepts: function (lines) {},
+    consume: function (lines) {
+      this.raw = lines.pop();
+    }
+  }
+});
+
+module.exports = exports = CommentLine;
+},{"../../utils":2,"../block":24}],10:[function(require,module,exports){
+var _U    = require('../../utils');
+var Block = require('../block');
+
+var fndefRgxp = /^(\s*)\[(\d+|fn:.+?)\]\s*/;
+
+var FootnoteDef = Block.define({
+  parent: Block,
+  type: 'fndef',
+  registerLevel: 'medium',
+  match: function (lines, parent) {
+    return _U.peak(lines).match(fndefRgxp);
+  },
+  methods: {
+    accepts: function (lines) {
+      var line = lines.peak();
+      var indent = _U.indentLevel(line);
+      return indent >= this.indent;
+    },
+    prepare: function (lines) {
+      var line = lines.pop();
+      // Register the footnote in the current document.
+      var m = line.match(fndefRgxp);
+      this.name = m[2];
+      this.document().declareFootnote(this);
+      // Remove the footnote declaration to allow sub-nodes parsing.
+      line = line.replace(fndefRgxp, '$1');
+      lines.push(line);
+    },
+    consume: function (lines) {
+      var line = lines.peak();
+      this.indent = _U.indentLevel(line);
+      this.prepare(lines);
+      var linebreak = 0;
+      do {
+        var next = new (Block.get(lines))(this.org, this);
+        this.append(next);
+        next.consume(lines);
+        linebreak = lines.trimBlank().length();
+      } while (linebreak === 0 && this.accepts(lines));
+    }
+  }
+});
+
+
+  var FndefBlock = function(parent){
+    ContentMarkupBlock.call(this, parent, "FndefBlock");
+    this.indent = parent.indent || 0;
+    this.firstline = true;
+  };
+  LineDef.FNDEF = {
+    id:     "FNDEF",
+    rgx:    RLT.fndef,
+    constr: FndefBlock
+  };
+  Content.FndefBlock = FndefBlock;
+  FndefBlock.prototype = Object.create(ContentMarkupBlock.prototype);
+  FndefBlock.prototype.accept = function(line, type){
+    var indent;
+    if(type === LineDef.FNDEF.id){
+      if(this.ended){return false;}
+      return true;
+    }
+    if(type === LineDef.BLANK.id){
+      if(this.ended){ return true; }
+      this.ended = true; return true;
+    }
+    if(this.ended){ return false; }
+    return true;
+  };
+  FndefBlock.prototype.consume = function(line, type){
+    if(this.firstline){
+      this.name = /^\s*\[(.*?)\]/.exec(line)[1].replace(/^fn:/, '');
+      this.firstline = false;
+    }
+    if(type !== LineDef.IGNORED.id){
+      this.lines.push(line);
+    }
+    return this;
+  };
+  FndefBlock.prototype.finalize = function(line){
+    var root = this.root();
+    var content = this.lines.join("\n");
+    content = content.replace(/^(\s*)\[.*?\]/, "$1");
+    var inline = OM.parse(this, content);
+    root.addFootnoteDef(inline, this.name);
+  };
+
+
+
+module.exports = exports = FootnoteDef;
+},{"../../utils":2,"../block":24}],11:[function(require,module,exports){
+var Block    = require('../block');
+var BeginEnd = require('./beginend');
+
+var Example = Block.define({
+  parent: BeginEnd,
+  type: "example",
+  registerLevel: "medium",
+  methods: {}
+});
+
+module.exports = exports = Example;
+},{"../block":24,"./beginend":26}],12:[function(require,module,exports){
+var Block    = require('../block');
+var BeginEnd = require('./beginend');
+
+var Quote = Block.define({
+  parent: BeginEnd,
+  type: "quote",
+  registerLevel: "medium",
+  methods: {}
+});
+
+module.exports = exports = Quote;
+},{"../block":24,"./beginend":26}],13:[function(require,module,exports){
+var Block    = require('../block');
+var BeginEnd = require('./beginend');
+
+var Comment = Block.define({
+  parent: BeginEnd,
+  type: "comment",
+  registerLevel: "medium",
+  methods: {}
+});
+
+module.exports = exports = Comment;
+},{"../block":24,"./beginend":26}],14:[function(require,module,exports){
+var Block    = require('../block');
+var BeginEnd = require('./beginend');
+
+var Verse = Block.define({
+  parent: BeginEnd,
+  type: "verse",
+  registerLevel: "medium",
+  methods: {}
+});
+
+module.exports = exports = Verse;
+},{"../block":24,"./beginend":26}],15:[function(require,module,exports){
+var Block    = require('../block');
+var BeginEnd = require('./beginend');
+
+var Src = Block.define({
+  parent: BeginEnd,
+  type: "src",
+  registerLevel: "medium",
+  methods: {
+    params: function (line) {
+      var match = /^\s*#\+begin_src\s+([a-z\-]+)(?:\s|$)/i.exec(line);
+      this.language = match ? match[1] : null;
+      // TODO: deal with switches (see org doc 11.3)
+    }
+  }
+});
+
+module.exports = exports = Src;
+},{"../block":24,"./beginend":26}],16:[function(require,module,exports){
+var _U    = require('../../utils');
+var Block = require('../block');
+var List  = require('./_list');
+
+var UlItem = require('./dlitem');
+
+var Ulist = List.define({
+  itemType: UlItem,
+  type: 'ul',
+  registerLevel: 'low',
+  methods: {
+    prepare: function (lines) {}
+  }
+});
+
+module.exports = exports = Ulist;
+},{"../../utils":2,"../block":24,"./_list":27,"./dlitem":21}],17:[function(require,module,exports){
+var _U    = require('../../utils');
+var Block = require('../block');
+var Item  = require('./_item');
+
+var UlItem = Block.define({
+  parent: Item,
+  type: 'ulitem',
+  methods: {
+    prepare: function (lines) {
+      var line = lines.pop();
+      this.indent = _U.indentLevel(line) + 2;
+      // Remove the list marker
+      line = line.replace(/^(\s*)[+*-]\s/, '$1  ');
+      // Parse and remove the checkbox if present
+      var chkbox = _U.ensure(line.match(/^\s*\[([ X-])\]\s/), [])[1];
+      if (chkbox) {
+        this.chkbox = chkbox;
+        line = line.replace(/^(\s*)\[[ X-]\]\s/, '$1');
+      }
+      // Push the modified line to parse the list item content
+      lines.push(line);
+    }
+  }
+});
+
+UlItem.rgxp = /^\s*[+*-]\s/;
+
+module.exports = exports = UlItem;
+},{"../../utils":2,"../block":24,"./_item":28}],18:[function(require,module,exports){
+var _U    = require('../../utils');
+var Block = require('../block');
+var List  = require('./_list');
+
+var OlItem = require('./olitem');
+
+var Olist = List.define({
+  itemType: OlItem,
+  type: 'ol',
+  registerLevel: 'medium',
+  methods: {
+    prepare: function (lines) { this.count = 0; }
+  }
+});
+
+module.exports = exports = Olist;
+},{"../../utils":2,"../block":24,"./_list":27,"./olitem":19}],19:[function(require,module,exports){
+var _U    = require('../../utils');
+var Block = require('../block');
+var Item  = require('./_item') ;
+
+var OlItem = Block.define({
+  parent: Item,
+  type: 'olitem',
+  methods: {
+    prepare: function (lines) {
+      var line = lines.pop();
+      this.indent = _U.indentLevel(line) + 3;
+      // Remove the list marker
+      line = line.replace(/^(\s*)\d[.)]\s/, '$1   ');
+      // Remove the item number if present
+      var num = _U.ensure(line.match(/^\s*\[@(\d+)\]\s/), [])[1];
+      if (num) {
+        this.num = parseInt(num, 10);
+        this.parent.count = this.num;
+        line = line.replace(/^(\s*)\[@(\d+)\]\s/, '$1');
+      } else {
+        this.num = ++(this.parent.count);
+      }
+      // Parse and remove the checkbox if present
+      var chkbox = _U.ensure(line.match(/^\s*\[([ X-])\]\s/), [])[1];
+      if (chkbox) {
+        this.chkbox = chkbox;
+        line = line.replace(/^(\s*)\[[ X-]\]\s/, '$1');
+      }
+      // Push the modified line to parse the list item content
+      lines.push(line);
+    }
+  }
+});
+
+OlItem.rgxp = /^(\s*)\d[.)]\s/;
+
+module.exports = exports = OlItem;
+},{"../../utils":2,"../block":24,"./_item":28}],20:[function(require,module,exports){
+var _U    = require('../../utils');
+var Block = require('../block');
+var List  = require('./_list');
+
+var DlItem = require('./dlitem');
+
+var Dlist = List.define({
+  itemType: DlItem,
+  type: 'dl',
+  registerLevel: 'medium',
+  methods: {
+    prepare: function (lines) {}
+  }
+});
+
+module.exports = exports = Dlist;
+},{"../../utils":2,"../block":24,"./_list":27,"./dlitem":21}],21:[function(require,module,exports){
+var _U    = require('../../utils');
+var Block = require('../block');
+var Item  = require('./_item') ;
+
+var DlItem = Block.define({
+  parent: Item,
+  type: 'ulitem',
+  match: function (lines, parent) {
+    return _U.ensure(_U.peak(lines),'').match(dlitemRgxp);
+  },
+  methods: {
+    prepare: function (lines) {
+      var line = lines.pop();
+      this.indent = _U.indentLevel(initLine) + 2;
+      // Get the tag name
+      var m = line.match(dlitemRgxp);
+      this.tag = m[2];
+      // Remove the list marker
+      line = line.replace(dlitemRgxp, '$1  ');
+      // Push the modified line to parse the list item content
+      if (_U.notBlank(line)) { lines.push(line); }
+    }
+  }
+});
+
+DlItem.rgxp = /^(\s*)[+*-]\s+(.*)\s*::\s*/;
+
+module.exports = exports = DlItem;
+},{"../../utils":2,"../block":24,"./_item":28}],22:[function(require,module,exports){
+var Block = require('../block');
+
+var startRgxp = /^\s*:(\w+):\s*$/i;
+var endRgxp = /^\s*:END:\s*$/i;
+
+var Drawers = Block.define({
+  parent: Block,
+  type: 'drawer',
+  registerLevel: 'low',
+  match: function (lines) {
+    return _U.ensure(_U.peak(lines), '').match(startRgxp);
+  },
+  methods: {
+    treat: function (lines) {
+      this.content = lines.asArray();
+    },
+    consume: function (lines) {
+      var line = lines.pop();
+      this.name = line.match(startRgxp)[1];
+      var contentLines = lines.popUntil(endRgxp);
+      this.treat(contentLines);
+      lines.pop();
+      lines.trimBlank();
+    }
+  }
+});
+},{"../block":24}],29:[function(require,module,exports){
 
 if (typeof Object.create !== 'function') {
   Object.create = function (o) {
@@ -64,32 +598,115 @@ if (!Array.prototype.indexOf) {
     return -1;
   };
 }
-},{}],2:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
+var _U      = require('../utils');
+var Block   = require('./block');
+
+var Content = function (org, parent) {
+  Block.apply(this, arguments);
+  this.type = "content";
+};
+
+_U.extendProto(Content, Block, {
+  consume: function (lines) {
+    lines.trimBlank();
+    var next = 1;
+    while (next && lines.length() > 0) {
+      next = new (Block.get(lines))(this.org, this);
+      if (next) {
+        this.append(next);
+        next.consume(lines);
+        lines.trimBlank();
+      }
+    }
+  }
+});
+
+module.exports = exports = Content;
+},{"../utils":2,"./block":24}],2:[function(require,module,exports){
 require('./shim');
 var _ = require('lodash');
 
 var _U = {
   
-  extendProto: function (Constr, Parent, fns) {
-    _.assign(Constr.prototype, Parent.prototype, fns);
-  },
-
-  incrementor: function () { var i = 0; return function(){ return ++i; }; },
-
-  /*orgdoc
-       + =repeat(str, times)= repeats the given string n times
-  */
   repeat: function(str, times){
     var result = [];
-    for(var i=0; i<times; i++){
-      result.push(str);
-    }
+    for(var i=0; i<times; i++){ result.push(str); }
     return result.join('');
   },
 
-  /*orgdoc
-       + =each(arr, fn)= applies a function for each element of the given array or object
-  */
+  array: function (o) { return Array.prototype.slice.call(o); },
+
+  ensure: function (obj, def) {
+    return (obj || def || {});
+  },
+
+  blank: function(str){
+    // Valid only for strings and arrays
+    return !str || (""+str).match(/^\s*$/);
+  },
+
+  notBlank: function(str){
+    // Valid only for strings and arrays
+    return !this.blank(str);
+  },
+
+  peak: function (lines) {
+    return  lines.peak ? lines.peak() : "" + lines;
+  },
+
+  indentLevel: function (line){
+    return (/^ */).exec(line || "")[0].length;
+  },
+
+  /**
+   * Creates an array of lines to be parsed. The lines are in reverse order.
+   * This means that in order to access the first line to parse, use lines.pop().
+   * 
+   * @param  {String} text the string to make lines out of
+   * @return {Array} the lines in reverse order
+   */
+  lines: function (text) {
+    return text.split(/\r?\n/g).reverse();
+  },
+
+  /**
+   * Builds a parsing state object, with the last parsed object and the rest of
+   * the lines to parse.
+   * @param  {Object} node  the last object parsed
+   * @param  {Array}  lines the rest of the lines to parse
+   * @return {Object} 
+   */
+  state: function (node, lines) {
+    return {
+      "node" : node,
+      "lines": lines
+    };
+  },
+
+  /**
+   * Build the prototype of the given Constructor with the functions of the
+   * Parent prototype, and the given functions in the fns object.
+   *
+   * @param  {Function} Constr a constructor function
+   * @param  {Function} Parent the parent constructor function
+   * @param  {Object}   fns    the functions to add, specific to Constr
+   * @return {Object} the new Constr prototype
+   */
+  extendProto: function (Constr, Parent, fns, args) {
+    Constr.prototype = _.assign({}, Parent.prototype, Constr.prototype, fns);
+    return Constr.prototype;
+  },
+
+  /**
+   * Provides an incrementing function.
+   * @return {Function} A function returning an integer incremented at each call.
+   */
+  incrementor: function () { var i = 0; return function(){ return ++i; }; },
+
+  /**
+   * Applies a function for each element of the given array or object
+   */
   each: function(arr, fn){
     var name, length = arr.length, i = 0, isObj = length === undefined;
     if ( isObj ) {
@@ -104,10 +721,10 @@ var _U = {
     }
   },
 
-  /*orgdoc
-       + =map(arr, fn)= applies the given function for each element of the given array or
-         object, and returns the array of results
-  */
+  /**
+   * Applies the given function for each element of the given array or
+   * object, and returns the array of results
+   */
   map: function(arr, fn){
     var result = [];
     this.each(arr, function(val, idx){
@@ -117,10 +734,10 @@ var _U = {
     return result;
   },
 
-  /*orgdoc
-       + =filter(arr, fn)= applies the given function for each element of the given array or
-         object, and returns the array of filtered results
-  */
+  /** 
+   * Applies the given function for each element of the given array or
+   * object, and returns the array of filtered results
+   */
   filter: function(arr, fn){
     var result = [];
     this.each(arr, function(val, idx){
@@ -131,10 +748,66 @@ var _U = {
   }
 };
 
+/**
+ * An easily callable incrementor.
+ * @type {Function}
+ */
 _U.id = _U.incrementor();
 
 module.exports = exports = _U;
-},{"./shim":4,"lodash":6}],6:[function(require,module,exports){
+},{"./shim":29,"lodash":31}],3:[function(require,module,exports){
+var _ = require('lodash');
+
+var Config = {};
+
+Config.defaults = {
+  tabSize: 4,
+  headlineTodos: ['TODO', 'DONE'],
+  headlinePriorities: ['A', 'B', 'C'],
+  get: function (p, def) { return this.hasOwnProperty(p) ? this[p] : def; }
+};
+
+/**
+ * Prepare a given configuration object into a full-blown 
+ * configuration, with all omitted defaults values in place.
+ * 
+ * @param  {Object} params the partial configuration object
+ * @return {Object}        the complete configuration, with defaults
+ */
+Config.prepare = function (params) {
+  return _.defaults({}, params, Config.defaults);
+};
+
+module.exports = exports = Config;
+},{"lodash":31}],28:[function(require,module,exports){
+var _U    = require('../../utils');
+var Block = require('../block');
+
+var Item = Block.define({
+  parent: Block,
+  type: '_item',
+  match: function (lines, parent) {
+    return _U.ensure(_U.peak(lines),'').match(this.rgxp);
+  },
+  methods: {
+    accepts: function (lines) {
+      return _U.indentLevel(lines.peak()) >= this.indent;
+    },
+    consume: function (lines) {
+      var next;
+      this.prepare(lines);
+      do {
+        next = new (Block.get(lines))(this.org, this);
+        this.append(next);
+        next.consume(lines);
+        lines.trimBlank();
+      } while (this.accepts(lines));
+    }
+  }
+});
+
+module.exports = exports = Item;
+},{"../../utils":2,"../block":24}],31:[function(require,module,exports){
 (function(global){/**
  * @license
  * Lo-Dash 1.2.0 (Custom Build) <http://lodash.com/>
@@ -5375,19 +6048,234 @@ module.exports = exports = _U;
 }(this));
 
 })(window)
-},{}],5:[function(require,module,exports){
-var _U = require('./utils');
-var _ = require('lodash');
+},{}],7:[function(require,module,exports){
+var _        = require('lodash');
+var _U       = require('../utils');
 
-var TreeNode = function(parent, params){
-  var p          = params || {};
-  this.nodeType  = p.nodeType || "unknown";
-  this.id        = _U.id();
-  this.parent    = parent || null;
+var Block    = require('./block');
+var Content  = require('./content');
+
+var Section = function (org, parent) {
+  Block.call(this, org, parent);
+  this.type = "section";
+};
+
+Section.match = function (lines) {
+  var line = _U.peak(lines);
+  return !!(line && /^\*/.exec(line));
+};
+
+_U.extendProto(Section, Block, {
+  accepts: function (lines) {
+    if (lines.length() === 0) {return false;}
+    var line = lines.peak();
+    var headline = this.org.parse.headline(line);
+    var level = headline.level;
+    return (level > this.level);
+  },
+  consume: function (lines) {
+    if (Section.match(lines)) {
+      var line = lines.pop();
+      this.headline = this.org.parse.headline(line);
+      this.level = this.headline.level;
+    } else {
+      this.level = 0;
+    }
+
+    var contentLines = lines.popUntil(Section.match);
+    this.content = new Content(this.org, this);
+    this.content.consume(contentLines);
+
+    while (this.accepts(lines)) {
+      var child = new Section(this.org, this);
+      this.append(child);
+      child.consume(lines);
+    }
+
+  }
+});
+
+module.exports = exports = Section;
+},{"../utils":2,"./block":24,"./content":30,"lodash":31}],24:[function(require,module,exports){
+var _        = require('lodash');
+var _U       = require('../utils');
+var TreeNode = require('../tree');
+
+var Block = function (org, parent) {
+  TreeNode.call(this, org, parent);
+  this.properties = {};
+};
+
+_U.extendProto(Block, TreeNode, {
+  init: function (org, parent) {},
+  document: function () { return this.root(); },
+  parentIndent: function () {
+    return (this.parent && this.parent.indent) ? this.parent.indent : 0;
+  }
+});
+
+var lvls = Block.levels = ['highest', 'high', 'medium', 'low', 'lowest'];
+// Create an object associating each level key to an empty array
+var prec = Block.precedence = _.zipObject(lvls, _.map(lvls, function(){return [];}));
+
+/**
+ * Allows to register a new Block constructor at a given precedence level.
+ * @param  {Block} Constr the block constructor
+ * @param  {String} level  the level name, must be present in Block.levels
+ */
+Block.register = function (Constr, level) {
+  if (!_.isArray(prec[level])) { throw 'Unknown level : ' + level; }
+  prec[level].push(Constr);
+};
+
+/**
+ * Get the Block constructor matching the given lines.
+ * @param  {Array} lines the following lines
+ * @return {Block}       the constructor
+ */
+Block.get = function (lines, parent) {
+  var result;
+  _.each(lvls, function(lvl){
+    if (result) {return;}
+    _.each(prec[lvl], function(Constr){ 
+      if (Constr.match(lines, parent)) { result = Constr; } 
+    });
+  });
+  return result;
+};
+
+Block.define = function (obj) {
+  var Result = function () {
+    (obj.parent).apply(this, arguments);
+    this.type = obj.type;
+    if (this.init) { this.init.apply(this, arguments); }
+  };
+  Result.type = obj.type;
+  Result.match = obj.match || obj.parent.match || function () { return false; };
+  _U.extendProto(Result, obj.parent, obj.methods);
+  if (obj.registerLevel) { Block.register(Result, obj.registerLevel); }
+  return Result;
+};
+
+module.exports = exports = Block;
+},{"../utils":2,"../tree":32,"lodash":31}],25:[function(require,module,exports){
+var _  = require('lodash');
+var _U = require('../utils');
+
+/**
+ * Lines constructor
+ * @param {String|Array} text either a string which will be split into lines,
+ *                            or an array of lines in reverse order.
+ */
+var Lines = function (text) {
+  if (_.isArray(text)) {
+    this.arr = text;
+  } else if (_.isString(text)) {
+    this.arr = text.split(/\r?\n/g).reverse();
+  } else {
+    this.arr = [];
+  }
+};
+
+Lines.prototype = {
+  length  : function () { return this.arr.length; },
+  
+  rest    : function () { return this.arr.slice().reverse(); },
+  asArray : function () { return this.rest(); },
+  
+  text    : function () { return this.arr.reverse().join('\n'); },
+  asString: function () { return this.text(); },
+  
+  peak    : function () { return this.arr[this.arr.length - 1]; },
+  pop     : function () { return this.arr.pop(); },
+
+  /**
+   * Returns a new Lines object containing all lines popped from this, until
+   * they do not match the given matcher function/regexp anymore.
+   *
+   * The lines in the result are really popped from this, so they are not in
+   * this anymore.
+   * 
+   * @param  {Function|RegExp} matcher the matcher
+   * @return {Lines}           a new lines object.
+   */
+  popWhile: function (matcher) {
+    var matcherFn = matcher;
+    if (_.isRegExp(matcher)) {
+      matcherFn = function (str) {
+        return str.match(matcher);
+      };
+    }
+
+    var result = [];
+    var line = this.pop();
+    while (_.isString(line) && matcherFn(line)) {
+      result.push(line);
+      line = this.pop();
+    }
+    if (_.isString(line)) { this.push(line); }
+    return new Lines(result.reverse());
+  },
+
+  /**
+   * Same as popWhile, except that it pops all lines until the match the given
+   * function/regexp.
+   * 
+   * @param  {Function|RegExp} matcher the matcher
+   * @return {Lines}           a new lines object.
+   */
+  popUntil: function (matcher) {
+    var matcherFn = function () {return true;};
+    if (_.isRegExp(matcher)) {
+      matcherFn = function (str) {
+        return !str.match(matcher);
+      };
+    } else if (_.isFunction(matcher)) {
+      matcherFn = function (str) {return !matcher(str);};
+    }
+    return this.popWhile(matcherFn);
+  },
+
+  trimBlank: function () {
+    return this.popWhile(/^\s*$/);
+  },
+
+  push: function (arg) {
+    if (_.isString(arg)) {
+      this.arr.push(arg);
+    } else if (_.isArray(arg)) {
+      this.arr = this.arr.concat(arg);
+    } else {
+      this.arr.push('');
+    }
+  }
+};
+
+module.exports = exports = Lines;
+},{"../utils":2,"lodash":31}],32:[function(require,module,exports){
+var _U = require('./utils');
+var _  = require('lodash');
+
+var TreeNode = function(org, parent){
+  this.org        = org || {};
+  this.conf       = this.org.conf || {};
+  this.parent     = parent || null;
+  this.id         = _U.id();
   this._children  = [];
 };
 
 TreeNode.prototype = {
+
+  section: function () {
+    var current = this.parent;
+    while (current) {
+      if (current.type === 'section') {
+        return current;
+      } else {
+        current = current.parent;
+      }
+    }
+  },
 
   ancestors: function(){
     var result = [];
@@ -5506,5 +6394,83 @@ TreeNode.prototype = {
 };
 
 module.exports = exports = TreeNode;
-},{"./utils":2,"lodash":6}]},{},[1])
+},{"./utils":2,"lodash":31}],26:[function(require,module,exports){
+var _     = require('lodash');
+var _U    = require('../../utils');
+var Block = require('../block');
+
+var BeginEnd = (function () { 
+
+  var makeRgxp = (function () {
+    var memoResolver = function () { return _U.array(arguments).join(' '); };
+    var result = function (be, type) {
+      return new RegExp('^\\s*#\\+' + be + '_' + type, 'i');
+    };
+    return _.memoize(result, memoResolver);
+  }());
+
+  return Block.define({
+    parent: Block,
+    type: "beginend",
+    match: function (lines, parent) {
+      var beginRgxp = makeRgxp('begin', this.type);
+      return _U.ensure(_U.peak(lines), '').match(beginRgxp);
+    },
+    methods: {
+      accepts: function (lines) { return false; },
+      params: function (line) {},
+      consume: function (lines) {
+        this.params(lines.pop());
+        var endRgxp = makeRgxp('end', this.type);
+        this.content = lines.popUntil(endRgxp);
+        lines.pop(); // Remove the end line
+        lines.trimBlank();
+        this.finalize();
+      },
+      finalize: function () {}
+    }
+  });
+
+}());
+
+module.exports = exports = BeginEnd;
+},{"../../utils":2,"../block":24,"lodash":31}],27:[function(require,module,exports){
+var _     = require('lodash');
+var _U    = require('../../utils');
+var Block = require('../block');
+
+var List = {};
+
+List.define = function (obj) {
+
+  var ItemType = obj.itemType;
+
+  var methods = _.defaults(obj.methods, {
+    accepts: function (lines) {
+      return ItemType.match(lines) && _U.indentLevel(lines.peak()) === this.indent;
+    },
+    consume: function (lines) {
+      this.indent = _U.indentLevel(lines.peak());
+      this.prepare(lines);
+      do {
+        var item = new ItemType(this.org, this);
+        this.append(item);
+        item.consume(lines);
+      } while (this.accepts(lines));
+    }
+  });
+
+  var result = Block.define({
+    parent       : Block,
+    type         : obj.type,
+    registerLevel: obj.registerLevel,
+    match        : ItemType.match,
+    methods      : methods
+  });
+
+  return result;
+};
+
+module.exports = exports = List;
+},{"../../utils":2,"../block":24,"lodash":31}]},{},[1])
 ;

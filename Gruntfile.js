@@ -33,7 +33,7 @@ module.exports = function(grunt) {
       orgjs:{
         src: ['lib/src/core.js'],
         dest: 'dist/orgjs.js'
-      },
+      }
     },
 
     uglify: {
