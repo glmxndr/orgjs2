@@ -2,15 +2,15 @@ require('jasmine-matchers')
 _ = require('lodash')
 
 Config = require('../../src/config.js')
-Heading = require('../../src/block/heading.js')
+Headline = require('../../src/block/headline.js')
 
-describe 'Heading', ->
+describe 'Headline', ->
   it 'should be defined', ->
-    expect(Heading).toBeDefined()
-    expect(Heading).not.toBeNull()
+    expect(Headline).toBeDefined()
+    expect(Headline).not.toBeNull()
 
-describe 'Heading.parser', ->
-  parser = Heading.parser(Config.defaults)
+describe 'Headline.parser', ->
+  parser = Headline.parser(Config.defaults)
   it 'should provide a function', ->
     expect(parser).toBeOfType('function')
 
