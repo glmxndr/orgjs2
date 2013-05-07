@@ -1,11 +1,10 @@
-require('jasmine-matchers')
-_U    = require '../src/utils.js'
+require 'jasmine-matchers'
+_U    = require '../src/utils'
 _U.id = _U.incrementor()
 _     = require 'lodash'
 ids   = (arr) -> _.pluck(arr, 'id')
 
-TreeNode = require '../src/tree.js'
-
+TreeNode = require '../src/tree'
 
 describe 'TreeNode', ->
   it 'should be defined', ->
@@ -13,18 +12,18 @@ describe 'TreeNode', ->
     expect(TreeNode).not.toBeNull()
 
   # Fixtures
-  root = new TreeNode(null)
-  n1  = new TreeNode(null, root)
-  n2  = new TreeNode(null, root)
-  n21 = new TreeNode(null, n2) 
+  root = new TreeNode()
+  n1  = new TreeNode(root)
+  n2  = new TreeNode(root)
+  n21 = new TreeNode(n2) 
   n2.append(n21)
-  n22 = new TreeNode(null, n2) 
+  n22 = new TreeNode(n2) 
   n2.append(n22)
-  n23 = new TreeNode(null, n2) 
+  n23 = new TreeNode(n2) 
   n2.append(n23)
-  n24 = new TreeNode(null, n2) 
+  n24 = new TreeNode(n2) 
   n2.append(n24)
-  n25 = new TreeNode(null, n2) 
+  n25 = new TreeNode(n2) 
   n2.append(n25)
 
   describe 'TreeNode.ancestors', ->

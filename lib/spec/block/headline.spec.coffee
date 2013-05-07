@@ -1,8 +1,7 @@
-require('jasmine-matchers')
-_ = require('lodash')
-
-Config = require('../../src/config.js')
-Headline = require('../../src/block/headline.js')
+require 'jasmine-matchers'
+_        = require 'lodash'
+Config   = require '../../src/config'
+Headline = require '../../src/block/headline'
 
 describe 'Headline', ->
   it 'should be defined', ->

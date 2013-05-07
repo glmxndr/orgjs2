@@ -1,9 +1,9 @@
 require 'jasmine-matchers'
 _       = require 'lodash'
-Block   = require '../../src/block/block'
+Org     = require '../../src/core'
+Block   = require '../../src/block'
 Section = require '../../src/block/section'
 Lines   = require '../../src/block/lines'
-Org     = require '../../src/core'
 
 describe 'Section.match', ->
   it 'should return true for a line starting with a star', ->
@@ -18,11 +18,16 @@ describe 'Section.consume', ->
   Introduction
   * Main title
   ** Sub1
+     Some para
+     continued TKN here
+
+     Another para
   ** Sub2
   * Conclusion
     The end
   """
-  doc = new Section(new Org(), null)
+  doc = new Section()
+  doc.org = new Org
   doc.consume(new Lines(txt))
 
   it 'should parse the correct structure', ->

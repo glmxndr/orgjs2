@@ -58,10 +58,10 @@ module.exports = function(grunt) {
     },
     exec: {
       test: {
-        cmd: './node_modules/jasmine-node/bin/jasmine-node --coffee --noStack ./lib/spec/'
+        cmd: 'node ./node_modules/jasmine-node/bin/jasmine-node --coffee --noStack ./lib/spec/'
       },
       testStack: {
-        cmd: './node_modules/jasmine-node/bin/jasmine-node --coffee ./lib/spec/'
+        cmd: 'node ./node_modules/jasmine-node/bin/jasmine-node --coffee ./lib/spec/'
       },
       debug: {
         cmd: 'node --debug-brk ./node_modules/jasmine-node/bin/jasmine-node --coffee --noStack ./lib/spec/'
