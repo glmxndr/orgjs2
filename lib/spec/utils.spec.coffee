@@ -1,6 +1,6 @@
-require('jasmine-matchers')
+require 'jasmine-matchers'
 
-_U = require('../src/utils.js')
+_U = require '../src/utils'
 
 describe 'Utils', ->
   it 'should be defined', ->

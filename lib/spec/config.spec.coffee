@@ -1,6 +1,6 @@
-require('jasmine-matchers')
+require 'jasmine-matchers'
 
-Config = require('../src/config.js')
+Config = require '../src/config'
 
 describe 'Config', ->
   it 'should be defined', ->

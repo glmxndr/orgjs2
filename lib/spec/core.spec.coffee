@@ -4,7 +4,13 @@ describe 'Org.parse', ->
   txt = """
   #+TITLE: Test document
 
-  This is a test document[fn:1].
+  Visit me please at http://hegemonikon.org/page\\. You may find that /intriguing/.
+
+  The \\alpha and the \\omega.
+
+  Want some $maths?$? Or some =crazy *code* test[fn:1]?=.
+
+  This _is *a* /test/ document[fn:1]_.
 
   [fn:1] It should be put in its own file. 
          But whatever.
@@ -22,6 +28,7 @@ describe 'Org.parse', ->
     org = new Org()
     parser = org.parse.document
     doc = parser txt
+    console.log doc
     expect(!!doc).toBe true
 
 describe 'Org.config', ->

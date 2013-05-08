@@ -1,6 +1,6 @@
 require 'jasmine-matchers'
-_      = require 'lodash'
-
+_U     = require '../src/utils'
+_      = _U._
 Org    = require '../src/core'
 Config = require '../src/config'
 Block  = require '../src/block'

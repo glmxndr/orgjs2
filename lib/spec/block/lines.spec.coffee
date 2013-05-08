@@ -1,5 +1,5 @@
 require 'jasmine-matchers'
-_     = require 'lodash'
+
 Lines = require '../../src/block/lines'
 
 txt1 = """

@@ -1,5 +1,5 @@
 require 'jasmine-matchers'
-_        = require 'lodash'
+
 Config   = require '../../src/config'
 Headline = require '../../src/block/headline'
 

@@ -78,9 +78,8 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-exec');
 
   grunt.registerTask('lint', ['jshint']);
-  grunt.registerTask('test', ['exec:test']);
-  grunt.registerTask('testStack', ['exec:testStack']);
-  grunt.registerTask('debug', ['coffeeify:test']);
-  grunt.registerTask('default', ['jshint', 'jasmine-node', 'browserify', 'uglify']);
+  grunt.registerTask('test', ['jshint', 'coffeeify:test', 'exec:test']);
+  grunt.registerTask('testStack', ['jshint', 'coffeeify:test', 'exec:testStack']);
+  grunt.registerTask('default', ['jshint', 'coffeeify:test', 'jasmine-node', 'browserify', 'uglify']);
 
 };

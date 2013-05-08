@@ -1,5 +1,4 @@
 require 'jasmine-matchers'
-_       = require 'lodash'
 Document = require '../../../src/document'
 
 Comment = require '../../../src/block/beginend/comment'

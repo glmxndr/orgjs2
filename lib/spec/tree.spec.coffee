@@ -1,7 +1,7 @@
 require 'jasmine-matchers'
 _U    = require '../src/utils'
 _U.id = _U.incrementor()
-_     = require 'lodash'
+_     = _U._
 ids   = (arr) -> _.pluck(arr, 'id')
 
 TreeNode = require '../src/tree'

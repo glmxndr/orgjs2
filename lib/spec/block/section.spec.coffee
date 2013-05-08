@@ -1,5 +1,5 @@
 require 'jasmine-matchers'
-_       = require 'lodash'
+
 Org     = require '../../src/core'
 Block   = require '../../src/block'
 Section = require '../../src/block/section'
