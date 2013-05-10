@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "jison": "~0.4.4",
-    "lodash": "~1.2.0"
+    "lodash": "~1.2.0",
+    "JSONPath": "~0.9.1"
   }
 }

@@ -33,10 +33,14 @@ describe 'Section.consume', ->
   it 'should parse the correct structure', ->
     expect(doc.children().length).toBe 2
     main = doc.children()[0]
+    expect(main.headline).toBeUndefined
     conclusion = doc.children()[1]
     expect(main.children().length).toBe 2
     sub1 = main.children()[0]
     sub2 = main.children()[0]
+    expect(sub1.headline).not.toBeUndefined
     expect(sub1.children().length).toBe 0
+    expect(sub2.headline).not.toBeUndefined
     expect(sub2.children().length).toBe 0
     expect(conclusion.children().length).toBe 0
+    expect(conclusion.headline).not.toBeUndefined

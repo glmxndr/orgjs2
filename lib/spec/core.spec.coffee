@@ -28,7 +28,7 @@ describe 'Org.parse', ->
     org = new Org()
     parser = org.parse.document
     doc = parser txt
-    console.log doc
+    #console.log doc
     expect(!!doc).toBe true
 
 describe 'Org.config', ->
