@@ -1275,8 +1275,8 @@ var Latex = Inline.define({
   registerLevel: 100,
   replace: function (txt, parent, tp, tokens) {
     var regexps = [
-      /(^|[\s\S]*[^\\])(($$)([\s\S]*?[^\\])$$)/g,
-      /(^|[\s\S]*[^\\])(($)([^\s][\s\S]*?[^\s\\]|[^\s\\])$)/g,
+      /(^|[\s\S]*[^\\])((\$\$)([\s\S]*?[^\\])\$\$)/g,
+      /(^|[\s\S]*[^\\])((\$)([^\s][\s\S]*?[^\s\\]|[^\s\\])\$)/g,
       /(^|[\s\S]*[^\\])((\\\()([\s\S]*?[^\\])\\\))/g,
       /(^|[\s\S]*[^\\])((\\\[)([\s\S]*?[^\\])\\\])/g
     ];
@@ -1423,7 +1423,7 @@ var PropDef = Block.define({
 });
 
 module.exports = exports = PropDef;
-},{"../../block":35,"../../utils":2}],11:[function(require,module,exports){
+},{"../../utils":2,"../../block":35}],11:[function(require,module,exports){
 var _U      = require('../../utils');
 var Block   = require('../../block');
 
@@ -1682,7 +1682,24 @@ var OlItem = Block.define({
 
 
 module.exports = exports = OlItem;
-},{"../../utils":2,"../../block":35,"./_item":41}],24:[function(require,module,exports){
+},{"../../utils":2,"../../block":35,"./_item":41}],23:[function(require,module,exports){
+var _U    = require('../../utils');
+var Block = require('../../block');
+var List  = require('./_list');
+
+var DlItem = require('./dlitem');
+
+var Dlist = List.define({
+  itemType: DlItem,
+  type: 'dl',
+  registerLevel: 'medium',
+  methods: {
+    prepare: function (lines) {}
+  }
+});
+
+module.exports = exports = Dlist;
+},{"../../utils":2,"../../block":35,"./_list":40,"./dlitem":24}],24:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 var Item  = require('./_item') ;
@@ -1711,24 +1728,7 @@ var DlItem = Block.define({
 });
 
 module.exports = exports = DlItem;
-},{"../../utils":2,"../../block":35,"./_item":41}],23:[function(require,module,exports){
-var _U    = require('../../utils');
-var Block = require('../../block');
-var List  = require('./_list');
-
-var DlItem = require('./dlitem');
-
-var Dlist = List.define({
-  itemType: DlItem,
-  type: 'dl',
-  registerLevel: 'medium',
-  methods: {
-    prepare: function (lines) {}
-  }
-});
-
-module.exports = exports = Dlist;
-},{"../../utils":2,"../../block":35,"./_list":40,"./dlitem":24}],25:[function(require,module,exports){
+},{"../../block":35,"../../utils":2,"./_item":41}],25:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 
