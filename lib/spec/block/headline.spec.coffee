@@ -16,7 +16,6 @@ describe 'Headline.parser', ->
   it 'should parse a simple headline', ->
     line = '** Simple headline'
     hl = parser(line)
-    expect(hl.title).toBe('Simple headline')
     expect(hl.stars).toBe('**')
     expect(hl.level).toBe(2)
     expect(hl.todo).toBeNull
