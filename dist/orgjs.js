@@ -441,36 +441,17 @@ var RenderEngine = function (obj) {
 };
 
 RenderEngine.prototype = {
-  alias: function (s) {
-    return s === 'p' ? 'para'
-         : s === 'r' ? 'regular'
-         : s === 'i' ? 'emphasis'
-         : s === 'b' ? 'strong'
-         : s === 'u' ? 'underline'
-         : s === 's' ? 'strike'
-         : s === 'h' ? 'headline'
-         : s === 'li' ? '[uo]litem' 
-         : s === 'uli' ? 'ulitem'
-         : s === 'oli' ? 'olitem'
-         : s === 'dli' ? 'dlitem'
-         : s;
-  },
-  transformPath: function (orgpath) {
-    var engine = this;
-    return '$..' + orgpath.replace(/[a-z]+/g, function (type) {
-      return '*[?(@.type && @.type.match(/' +  engine.alias(type) + '/))]';
-    });
-  },
   assignRenderers: function (doc, matchers, store) {
     var engine = this;
     var nodes  = [doc].concat(doc.descendants);
     _.each(nodes, function (n) {
       var renderFn = matchers[n.type];
-      if (renderFn) {
+      if (_.isFunction(renderFn)) {
         store[n.id] = _.bind(renderFn, n);
+      } else {
+        _U.log.error('No matcher for type', n.type);
       }
     });
-
   },
   render: function (doc) {
     var store = {};
@@ -556,7 +537,7 @@ Headline.parser = function (org) {
 };
 
 module.exports = exports = Headline;
-},{"../utils":2,"../config":5,"../core":1,"../block":35}],9:[function(require,module,exports){
+},{"../config":5,"../utils":2,"../core":1,"../block":35}],9:[function(require,module,exports){
 var _U = require('../utils');
 var _  = _U._;
 
@@ -1265,7 +1246,95 @@ var Code = verbTypes['='] = Inline.define({
 Verbatim.types = verbTypes;
 
 module.exports = exports = Verbatim;
-},{"../utils":2,"../inline":8}],33:[function(require,module,exports){
+},{"../utils":2,"../inline":8}],4:[function(require,module,exports){
+var _U = require('../../utils');
+var j  = _U.join;
+
+var silent = function () {return '';};
+
+var raw = function () { return this.raw; };
+
+var tag = function (name, content) {
+  return j('<', name, '>', content, '</', name, '>'); 
+};
+
+var tagchildren = function (t) { 
+  return function (r) { 
+    return tag(t, r(this.children())); 
+  };
+};
+
+var tagcontent = function (t) { 
+  return function (r) { 
+    return tag(t, r(this.content)); 
+  };
+};
+
+var defaultHtmlMatchers = {
+  document: function (r) {
+    return tag('article', j(r(this.content), r(this.children())));
+  },
+  section: function (r) {
+    return j(
+      '<section>', 
+      r(this.headline), 
+      r(this.content), 
+      r(this.children()), 
+      '</section>'
+    );
+  },
+  headline: function (r) {
+    return tag('h' + this.level, r(this.children()));
+  },
+  content: tagchildren('div'),
+
+  // Blocks
+  para: tagchildren('p'),
+  hr: function (r) { return '<hr/>'; },
+  fndef: raw,
+  propdef: silent,
+  commentline: silent,
+
+  // List blocks
+  ul: tagchildren('ul'),
+  ulitem: tagchildren('li'),
+  ol: tagchildren('ol'),
+  olitem: tagchildren('li'),
+  dl: tagchildren('dl'),
+  dlitem: function (r) {
+    return j('<dt>', r(this.desc), '</dt><dd>', r(this.children()), '</dd>');
+  },
+
+  // Begin-end blocks
+  verse: tagchildren('pre'),
+  src: tagchildren('pre'),
+  quote: tagchildren('blockquote'),
+  example: tagchildren('pre'),
+  comment: function (r) {
+    return j('<!--', this.raw, '-->');
+  },
+
+  // Inline
+  regular: function (r) {return this.content;},
+  emphasis: tagchildren('em'),
+  strong: tagchildren('b'),
+  underline: tagchildren('u'),
+  strike: tagchildren('s'),
+
+  entity: function (r) { return this.content.html; },
+  fnref: raw,
+
+  latex: tagcontent('code'),
+  verbatim: tagcontent('tt'),
+  code: tagcontent('code'),
+
+  link: function (r) {
+    return tag('a', this.desc || this.target);
+  }
+};
+
+module.exports = exports = defaultHtmlMatchers;
+},{"../../utils":2}],33:[function(require,module,exports){
 var _U     = require('../utils');
 var _      = _U._;
 var Inline = require('../inline');
@@ -1308,91 +1377,7 @@ var Latex = Inline.define({
 module.exports = exports = Latex;
 
 
-},{"../utils":2,"../inline":8}],4:[function(require,module,exports){
-var _U = require('../../utils');
-var j = _U.join;
-var silent = function () {return "";};
-var raw = function () { return this.raw; };
-var tag = function (name, content) {
-  return j('<', name, '>', content, '</', name, '>'); 
-};
-var tagchildren = function (t) { 
-  return function (r) { 
-    return tag(t, r(this.children())); 
-  };
-};
-var tagcontent = function (t) { 
-  return function (r) { 
-    return tag(t, r(this.content)); 
-  };
-};
-
-
-var defaultHtmlMatchers = {
-  document: function (r) {
-    return tag('article', j(r(this.content), r(this.children())));
-  },
-  section: function (r) {
-    return j(
-      '<section>', 
-      r(this.headline), 
-      r(this.content), 
-      r(this.children()), 
-      '</section>'
-    );
-  },
-  headline: function (r) {
-    return tag('h' + this.level, r(this.children()));
-  },
-  content: tagchildren('div'),
-
-  // Blocks
-  para: tagchildren('p'),
-  hr: function (r) { return '<hr/>'; },
-  fndef: raw,
-  propdef: silent,
-  commentline: silent,
-
-  // List blocks
-  ulist: tagchildren('ul'),
-  ulitem: tagchildren('li'),
-  olist: tagchildren('ol'),
-  olitem: tagchildren('li'),
-  dlist: tagchildren('dl'),
-  dlitem: function (r) {
-    return j('<dt>', r(this.desc), '</dt><dd>', r(this.children()), '</dd>');
-  },
-
-  // Begin-end blocks
-  verse: tagchildren('pre'),
-  src: tagchildren('pre'),
-  quote: tagchildren('blockquote'),
-  example: tagchildren('pre'),
-  comment: function (r) {
-    return j('<!--', this.raw, '-->');
-  },
-
-  // Inline
-  regular: function (r) {return this.content;},
-  emphasis: tagchildren('em'),
-  strong: tagchildren('b'),
-  underline: tagchildren('u'),
-  strike: tagchildren('s'),
-
-  entity: function (r) { return this.content.html; },
-  fnref: raw,
-
-  latex: tagcontent('code'),
-  verbatim: tagcontent('tt'),
-  code: tagcontent('code'),
-
-  link: function (r) {
-    return tag('a', this.desc || this.target);
-  }
-};
-
-module.exports = exports = defaultHtmlMatchers;
-},{"../../utils":2}],10:[function(require,module,exports){
+},{"../utils":2,"../inline":8}],10:[function(require,module,exports){
 var _U      = require('../../utils');
 var Block   = require('../../block');
 
@@ -1579,7 +1564,7 @@ var _U    = require('../../utils');
 var Block = require('../../block');
 var List  = require('./_list');
 
-var UlItem = require('./dlitem');
+var UlItem = require('./ulitem');
 
 var Ulist = List.define({
   itemType: UlItem,
@@ -1591,12 +1576,29 @@ var Ulist = List.define({
 });
 
 module.exports = exports = Ulist;
-},{"../../utils":2,"../../block":35,"./_list":40,"./dlitem":24}],20:[function(require,module,exports){
+},{"../../utils":2,"../../block":35,"./_list":40,"./ulitem":20}],21:[function(require,module,exports){
+var _U    = require('../../utils');
+var Block = require('../../block');
+var List  = require('./_list');
+
+var OlItem = require('./olitem');
+
+var Olist = List.define({
+  itemType: OlItem,
+  type: 'ol',
+  registerLevel: 'low',
+  methods: {
+    prepare: function (lines) { this.count = 0; }
+  }
+});
+
+module.exports = exports = Olist;
+},{"../../utils":2,"../../block":35,"./_list":40,"./olitem":22}],20:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 var Item  = require('./_item');
 
-var ulitemRgxp = /^\s*[+*-]\s/;
+var ulitemRgxp = /^\s*[\+\*-]\s/;
 
 var UlItem = Block.define({
   parent: Item,
@@ -1623,29 +1625,12 @@ var UlItem = Block.define({
 });
 
 module.exports = exports = UlItem;
-},{"../../utils":2,"../../block":35,"./_item":41}],21:[function(require,module,exports){
-var _U    = require('../../utils');
-var Block = require('../../block');
-var List  = require('./_list');
-
-var OlItem = require('./olitem');
-
-var Olist = List.define({
-  itemType: OlItem,
-  type: 'ol',
-  registerLevel: 'medium',
-  methods: {
-    prepare: function (lines) { this.count = 0; }
-  }
-});
-
-module.exports = exports = Olist;
-},{"../../utils":2,"../../block":35,"./_list":40,"./olitem":22}],22:[function(require,module,exports){
+},{"../../utils":2,"../../block":35,"./_item":41}],22:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 var Item  = require('./_item') ;
 
-var olitemRgxp = /^(\s*)\d[.)]\s/;
+var olitemRgxp = /^(\s*)\d[\.)]\s/;
 
 var OlItem = Block.define({
   parent: Item,
@@ -1704,7 +1689,7 @@ var _U    = require('../../utils');
 var Block = require('../../block');
 var Item  = require('./_item') ;
 
-var dlitemRgxp = /^(\s*)[+*-]\s+(.*)\s*::\s*/;
+var dlitemRgxp = /^(\s*)[\+\*-]\s+(.*?)\s*::\s*/;
 
 var DlItem = Block.define({
   parent: Item,
@@ -1728,7 +1713,7 @@ var DlItem = Block.define({
 });
 
 module.exports = exports = DlItem;
-},{"../../block":35,"../../utils":2,"./_item":41}],25:[function(require,module,exports){
+},{"../../utils":2,"../../block":35,"./_item":41}],25:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 
@@ -2250,7 +2235,7 @@ List.define = function (obj) {
       this.indent = _U.indentLevel(lines.peak());
       this.prepare(lines);
       do {
-        var item = new ItemType(this.org, this);
+        var item = new ItemType(this);
         this.append(item);
         item.consume(lines);
       } while (this.accepts(lines));
@@ -2284,7 +2269,7 @@ var Item = Block.define({
       var next;
       this.prepare(lines);
       do {
-        next = new (Block.get(lines))(this.org, this);
+        next = new (Block.get(lines))(this);
         this.append(next);
         next.consume(lines);
         lines.trimBlank();
