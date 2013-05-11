@@ -36,7 +36,6 @@ Org.prototype = {
 Org.components = {
   Document : require('./document'),
   block: {
-    PropDef    : Block.register( 100, require('./block/properties/propdef')),
     Hr         : Block.register( 100, require('./block/special/hr')),
     FnDef      : Block.register( 200, require('./block/special/fndef')),
     Example    : Block.register( 300, require('./block/beginend/example')),
@@ -53,6 +52,7 @@ Org.components = {
     OlItem     : Block.register( 550, require('./block/lists/olitem')),
     Drawer     : Block.register(1000, require('./block/special/drawer')),
     Section    : Block.register(8000, require('./block/section')),
+    PropDef    : Block.register(8500, require('./block/properties/propdef')),
     CommentLine: Block.register(9000, require('./block/special/commentline')),
     Para       : Block.register(9999, require('./block/para'))
   },
@@ -72,7 +72,7 @@ global.Org = Org;
 
 module.exports = exports = Org;
 })()
-},{"./utils":2,"./render/engine":3,"./render/default/html":4,"./block":5,"./inline":6,"./config":7,"./block/headline":8,"./document":9,"./block/properties/propdef":10,"./block/special/hr":11,"./block/special/fndef":12,"./block/beginend/example":13,"./block/beginend/quote":14,"./block/beginend/center":15,"./block/beginend/comment":16,"./block/beginend/verse":17,"./block/beginend/src":18,"./block/lists/dlist":19,"./block/lists/dlitem":20,"./block/lists/ulist":21,"./block/lists/ulitem":22,"./block/lists/olist":23,"./block/lists/olitem":24,"./block/special/drawer":25,"./block/section":26,"./block/special/commentline":27,"./block/para":28,"./inline/link":29,"./inline/latex":30,"./inline/fnref":31,"./inline/entity":32,"./inline/verbatim":33,"./inline/emphasis":34,"./inline/regular":35}],2:[function(require,module,exports){
+},{"./utils":2,"./render/engine":3,"./render/default/html":4,"./block":5,"./inline":6,"./config":7,"./block/headline":8,"./document":9,"./block/special/hr":10,"./block/special/fndef":11,"./block/beginend/example":12,"./block/beginend/quote":13,"./block/beginend/center":14,"./block/beginend/comment":15,"./block/beginend/verse":16,"./block/beginend/src":17,"./block/lists/dlist":18,"./block/lists/dlitem":19,"./block/lists/ulist":20,"./block/lists/ulitem":21,"./block/lists/olist":22,"./block/lists/olitem":23,"./block/special/drawer":24,"./block/section":25,"./block/properties/propdef":26,"./block/special/commentline":27,"./block/para":28,"./inline/link":29,"./inline/latex":30,"./inline/fnref":31,"./inline/entity":32,"./inline/verbatim":33,"./inline/emphasis":34,"./inline/regular":35}],2:[function(require,module,exports){
 (function(){require('./shim');
 
 dependency = function (name, alternate) {
@@ -276,6 +276,10 @@ var _U = {
         console.error.apply(console, arguments);
       }
     }
+  },
+
+  rgxp: {
+    propLine: /^\s*#\+([A-Z_]+)\+?:\s*([\S\s]*?)\s*$/i
   }
   
 };
@@ -297,7 +301,6 @@ var TreeNode = require('./tree');
 
 var Block = function (parent) {
   TreeNode.call(this, parent);
-  this.properties = {};
 };
 
 _U.extendProto(Block, TreeNode, {
@@ -459,7 +462,6 @@ var Document = Block.define({
       this.footnotes = [];
       this.org = org;
       delete this.parent;
-      this.descendants = [];
     },
     declareFootnote: function (fndef) {
       var number = this.footnotes.length;
@@ -490,13 +492,16 @@ Document.parser = function (org) {
     txt = txt.replace(/\t/g, tabspace);
     txt = Document.includes(txt);
     var d = new Document(org);
+    var lines = new Lines(txt);
+    lines.trimBlank();
+    d.setProperties(lines.properties());
     d.consume(new Lines(txt));  
     return d;
   };
 };
 
 module.exports = exports = Document;
-},{"./utils":2,"./block":5,"./block/section":26,"./config":7,"./block/lines":38,"./core":1}],3:[function(require,module,exports){
+},{"./utils":2,"./block":5,"./block/section":25,"./config":7,"./block/lines":38,"./core":1}],3:[function(require,module,exports){
 var _U       = require('../utils');
 var _        = _U._;
 var JSONPath = _U.dependency('JSONPath', 'jsonPath');
@@ -588,7 +593,7 @@ Headline.parser = function (org) {
 };
 
 module.exports = exports = Headline;
-},{"../utils":2,"../config":7,"../core":1,"../block":5}],26:[function(require,module,exports){
+},{"../utils":2,"../config":7,"../core":1,"../block":5}],25:[function(require,module,exports){
 var _U = require('../utils');
 var _  = _U._;
 
@@ -644,7 +649,6 @@ var Lines   = require('./lines');
 var Para = Block.define({
   parent: Block,
   type: "para",
-  registerLevel: "lowest",
   match: function (lines, parent) {
     return true;
   },
@@ -690,7 +694,6 @@ var linkBareRgxp   = /((?:http|https|ftp|mailto|file|news|shell|elisp|doi|messag
 
 var Link = Inline.define({
   type: 'link',
-  registerLevel: 10,
   replace: function (txt, parent, tp, tokens) {
     var replaceFn = function (raw, uri, desc) {
       var token     = "";
@@ -719,7 +722,6 @@ var Inline = require('../inline');
 
 var Latex = Inline.define({
   type: 'latex',
-  registerLevel: 100,
   replace: function (txt, parent, tp, tokens) {
     var regexps = [
       /(^|[\s\S]*[^\\])((\$\$)([\s\S]*?[^\\])\$\$)/g,
@@ -765,7 +767,6 @@ var fnrefRgxp = /\[(?:(\d+)|fn:([^:]*)(?::([\s\S]+?))?)\]/g;
 
 var FnRef = Inline.define({
   type: 'fnref',
-  registerLevel: 200,
   replace: function (txt, parent, tp, tokens) {
     return txt.replace(fnrefRgxp, function () {
       var a    = arguments;
@@ -797,13 +798,12 @@ var FnRef = Inline.define({
 });
 
 module.exports = exports = FnRef;
-},{"../utils":2,"../inline":6,"../block/special/fndef":12,"../block/lines":38}],32:[function(require,module,exports){
+},{"../utils":2,"../inline":6,"../block/special/fndef":11,"../block/lines":38}],32:[function(require,module,exports){
 var _U     = require('../utils');
 var Inline = require('../inline');
 
 var Entity = Inline.define({
   type: 'entity',
-  registerLevel: 300,
   replace: function (txt, parent, tp, tokens) {
     txt = txt.replace(/\\([a-z]+\d*)\b/g, function (m, e) {
       if (!Entity.store[e]) { return m; }
@@ -1222,7 +1222,6 @@ var verbTypes = {};
 
 var Verbatim = verbTypes['~'] = Inline.define({
   type: 'verbatim',
-  registerLevel: 500,
   replace: function (txt, parent, tp, tokens) {
     var replaceFn = function () {
       var a     = arguments;
@@ -1271,7 +1270,6 @@ var emphRgxp = /(^|[\s\S]*[^\\])(([\/*+_])([^\s][\s\S]*?[^\s\\]|[^\s\\])\3)/g;
 
 var Emphasis = Inline.define({
   type: 'emphasis',
-  registerLevel: 1000,
   replace: function (txt, parent, tp, tokens) {
     var matcher;
     var replaceFn = function () {
@@ -1321,7 +1319,6 @@ var Inline = require('../inline');
 
 var Regular = Inline.define({
   type: 'regular',
-  registerLevel: 9999,
   replace: function (txt, parent, tp, tokens) {
     var tknRgxp = new RegExp(tp + ':\\d+;', 'g');
     var pieces = txt.split(tknRgxp);
@@ -1365,7 +1362,7 @@ var tagcontent = function (t) {
 var defaultHtmlMatchers = {
   document: function (r, doc) {
     var result = [];
-    var title = doc.properties.TITLE;
+    var title = doc.properties.title;
     if (title) {
       result.push(tag('h1', j(r(doc.parseInline(title)))));
     }
@@ -1408,7 +1405,15 @@ var defaultHtmlMatchers = {
   // List blocks
   ul: tagchildren('ul'),
   ulitem: tagchildren('li'),
-  ol: tagchildren('ol'),
+  ol: function (r) {
+    var start = this.properties.start || 1;
+    var type = this.properties.type || '1';
+    return j(
+      '<ol start="', start, '" type="', type, '">', 
+      r(this.children()), 
+      '</ol>'
+    );
+  },
   olitem: tagchildren('li'),
   dl: tagchildren('dl'),
   dlitem: function (r) {
@@ -1416,10 +1421,33 @@ var defaultHtmlMatchers = {
   },
 
   // Begin-end blocks
-  verse: tagchildren('pre'),
+  verse: function (r) {
+    var s = '';
+    if (this.signature) { 
+      s = tag('figcaption', r(this.signature)); 
+    }
+    return j(
+      '<figure class="verse">', 
+      tag('pre', r(this.content)), 
+      s, 
+      '</figure>'
+    );
+  },
   src: tagchildren('pre'),
-  quote: tagchildren('blockquote'),
+  quote: function (r) {
+    var s = '';
+    if (this.signature) { 
+      s = tag('figcaption', r(this.signature)); 
+    }
+    return j(
+      '<figure class="quote">', 
+      tag('blockquote', r(this.content)), 
+      s, 
+      '</figure>'
+    );
+  },
   example: tagchildren('pre'),
+  center: tagchildren('center'),
 
   // Inline
   regular: function (r) {return this.content;},
@@ -1453,41 +1481,9 @@ module.exports = exports = defaultHtmlMatchers;
 var _U      = require('../../utils');
 var Block   = require('../../block');
 
-var propRgxp = /^\s*#\+([A-Z_]+):\s*([\S\s]*?)\s*$/i;
-
-var PropDef = Block.define({
-  type: 'propdef',
-  registerLevel: 'high',
-  match: function (lines, parent) {
-    var line = (_U.peak(lines) || '');
-    return !!line.match(propRgxp);
-  },
-  methods: {
-    consume: function (lines) {
-      var line = lines.pop();
-      this.raw = line;
-      var m = line.match(propRgxp);
-      var key = m[1];
-      var value = m[2];
-      var section = this.section();
-      if (section.properties[key]) {
-        section.properties[key] = section.properties[key] + '\n' + value;
-      } else {
-        section.properties[key] = value;
-      }
-    }
-  }
-});
-
-module.exports = exports = PropDef;
-},{"../../utils":2,"../../block":5}],11:[function(require,module,exports){
-var _U      = require('../../utils');
-var Block   = require('../../block');
-
 var Hr = Block.define({
   parent: Block,
   type: 'hr',
-  registerLevel: 'high',
   match: function (lines, parent) {
     return _U.ensure(_U.peak(lines), '').match(/^\s*-{5,}\s*$/);
   },
@@ -1500,7 +1496,7 @@ var Hr = Block.define({
 });
 
 module.exports = exports = Hr;
-},{"../../utils":2,"../../block":5}],12:[function(require,module,exports){
+},{"../../utils":2,"../../block":5}],11:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 
@@ -1509,7 +1505,6 @@ var fndefRgxp = /^(\s*)\[(\d+|fn:.+?)\]\s*/;
 var FnDef = Block.define({
   parent: Block,
   type: 'fndef',
-  registerLevel: 'medium',
   match: function (lines, parent) {
     return (_U.peak(lines) || "").match(fndefRgxp);
   },
@@ -1545,74 +1540,99 @@ var FnDef = Block.define({
 });
 
 module.exports = exports = FnDef;
-},{"../../utils":2,"../../block":5}],13:[function(require,module,exports){
+},{"../../utils":2,"../../block":5}],12:[function(require,module,exports){
 var Block    = require('../../block');
 var BeginEnd = require('./beginend');
 
 var Example = Block.define({
   parent: BeginEnd,
-  type: "example",
-  registerLevel: "medium",
+  type: 'example',
   methods: {}
 });
 
 module.exports = exports = Example;
-},{"../../block":5,"./beginend":40}],14:[function(require,module,exports){
+},{"../../block":5,"./beginend":40}],13:[function(require,module,exports){
 var Block    = require('../../block');
 var BeginEnd = require('./beginend');
 
 var Quote = Block.define({
   parent: BeginEnd,
-  type: "quote",
-  registerLevel: "medium",
-  methods: {}
+  type: 'quote',
+  methods: {
+    finalize: function () {
+      var lines = this.lines.asArray();
+      var lastLine = lines.pop();
+      var m = lastLine && (lastLine.match(/^\s*--\s+(.*)\s*$/));
+      if(m) {
+        this.signature = this.parseInline(m[1]);
+      } else {
+        lines.push(lastLine);
+      }
+      this.content = this.parseInline(lines.join('\n'));
+    }
+  }
 });
 
 module.exports = exports = Quote;
-},{"../../block":5,"./beginend":40}],15:[function(require,module,exports){
+},{"../../block":5,"./beginend":40}],14:[function(require,module,exports){
 var Block    = require('../../block');
 var BeginEnd = require('./beginend');
 
 var Center = Block.define({
   parent: BeginEnd,
-  type: "center",
-  registerLevel: "medium",
+  type: 'center',
   methods: {}
 });
 
 module.exports = exports = Center;
-},{"../../block":5,"./beginend":40}],16:[function(require,module,exports){
+},{"../../block":5,"./beginend":40}],15:[function(require,module,exports){
 var Block    = require('../../block');
 var BeginEnd = require('./beginend');
 
 var Comment = Block.define({
   parent: BeginEnd,
-  type: "comment",
-  registerLevel: "medium",
+  type: 'comment',
   methods: {}
 });
 
 module.exports = exports = Comment;
-},{"../../block":5,"./beginend":40}],17:[function(require,module,exports){
+},{"../../block":5,"./beginend":40}],16:[function(require,module,exports){
 var Block    = require('../../block');
 var BeginEnd = require('./beginend');
 
 var Verse = Block.define({
   parent: BeginEnd,
-  type: "verse",
-  registerLevel: "medium",
-  methods: {}
+  type: 'verse',
+  methods: {
+    params: function (line) {
+      this.indent = /^(\s*)/.exec(line || '')[1].length;
+    },
+    finalize: function () {
+      var lines = this.lines.asArray();
+      var lastLine = lines.pop();
+      var m = lastLine && (lastLine.match(/^\s*--\s+(.*)\s*$/));
+      if(m) {
+        this.signature = this.parseInline(m[1]);
+      } else {
+        lines.push(lastLine);
+      }
+      var i = this.indent;
+      var rgxp = new RegExp('^ {' + this.indent + '}');
+      lines = _.map(lines, function (l) { return l.replace(rgxp, ''); });
+      this.content = this.parseInline(lines.join('\n'));
+    }
+
+  }
 });
 
 module.exports = exports = Verse;
-},{"../../block":5,"./beginend":40}],18:[function(require,module,exports){
+},{"../../block":5,"./beginend":40}],17:[function(require,module,exports){
 var Block    = require('../../block');
 var BeginEnd = require('./beginend');
 
 var Src = Block.define({
   parent: BeginEnd,
-  type: "src",
-  registerLevel: "medium",
+  type: 'src',
   methods: {
     params: function (line) {
       var match = /^\s*#\+begin_src\s+([a-z\-]+)(?:\s|$)/i.exec(line);
@@ -1623,7 +1643,7 @@ var Src = Block.define({
 });
 
 module.exports = exports = Src;
-},{"../../block":5,"./beginend":40}],19:[function(require,module,exports){
+},{"../../block":5,"./beginend":40}],18:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 var List  = require('./_list');
@@ -1633,14 +1653,13 @@ var DlItem = require('./dlitem');
 var Dlist = List.define({
   itemType: DlItem,
   type: 'dl',
-  registerLevel: 'medium',
   methods: {
     prepare: function (lines) {}
   }
 });
 
 module.exports = exports = Dlist;
-},{"../../utils":2,"../../block":5,"./_list":41,"./dlitem":20}],20:[function(require,module,exports){
+},{"../../utils":2,"../../block":5,"./_list":41,"./dlitem":19}],19:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 var Item  = require('./_item') ;
@@ -1669,7 +1688,7 @@ var DlItem = Block.define({
 });
 
 module.exports = exports = DlItem;
-},{"../../utils":2,"../../block":5,"./_item":42}],21:[function(require,module,exports){
+},{"../../utils":2,"../../block":5,"./_item":42}],20:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 var List  = require('./_list');
@@ -1679,14 +1698,13 @@ var UlItem = require('./ulitem');
 var Ulist = List.define({
   itemType: UlItem,
   type: 'ul',
-  registerLevel: 'low',
   methods: {
     prepare: function (lines) {}
   }
 });
 
 module.exports = exports = Ulist;
-},{"../../utils":2,"../../block":5,"./_list":41,"./ulitem":22}],22:[function(require,module,exports){
+},{"../../utils":2,"../../block":5,"./_list":41,"./ulitem":21}],21:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 var Item  = require('./_item');
@@ -1708,7 +1726,7 @@ var UlItem = Block.define({
       // Parse and remove the checkbox if present
       var chkbox = _U.ensure(line.match(/^\s*\[([ X-])\]\s/), [])[1];
       if (chkbox) {
-        this.chkbox = chkbox;
+        this.properties.checkbox = chkbox;
         line = line.replace(/^(\s*)\[[ X-]\]\s/, '$1');
       }
       // Push the modified line to parse the list item content
@@ -1718,29 +1736,46 @@ var UlItem = Block.define({
 });
 
 module.exports = exports = UlItem;
-},{"../../utils":2,"../../block":5,"./_item":42}],23:[function(require,module,exports){
+},{"../../utils":2,"../../block":5,"./_item":42}],22:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 var List  = require('./_list');
 
 var OlItem = require('./olitem');
 
+var olRgxp = /^(\s*)\d+[\.)]\s/;
+
 var Olist = List.define({
   itemType: OlItem,
   type: 'ol',
-  registerLevel: 'low',
+  match: function (lines, parent) {
+    var line = lines.peakOverProperties();
+    return line.match(olRgxp);
+  },
   methods: {
-    prepare: function (lines) { this.count = 0; }
+    prepare: function (lines) { this.count = 0; },
+    consume: function (lines) {
+      var props = lines.properties();
+      this.setProperties(props);
+
+      this.indent = _U.indentLevel(lines.peak());
+      this.prepare(lines);
+      do {
+        var item = new OlItem(this);
+        this.append(item);
+        item.consume(lines);
+      } while (this.accepts(lines));
+    }
   }
 });
 
 module.exports = exports = Olist;
-},{"../../utils":2,"../../block":5,"./_list":41,"./olitem":24}],24:[function(require,module,exports){
+},{"../../utils":2,"../../block":5,"./_list":41,"./olitem":23}],23:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 var Item  = require('./_item') ;
 
-var olitemRgxp = /^(\s*)\d[\.)]\s/;
+var olitemRgxp = /^(\s*)\d+[\.)]\s/;
 
 var OlItem = Block.define({
   parent: Item,
@@ -1753,12 +1788,12 @@ var OlItem = Block.define({
       var line = lines.pop();
       this.indent = _U.indentLevel(line) + 3;
       // Remove the list marker
-      line = line.replace(/^(\s*)\d[.)]\s/, '$1   ');
+      line = line.replace(olitemRgxp, '$1   ');
       // Remove the item number if present
       var num = _U.ensure(line.match(/^\s*\[@(\d+)\]\s/), [])[1];
       if (num) {
         this.num = parseInt(num, 10);
-        this.parent.count = this.num;
+        this.parent.properties.start = this.num;
         line = line.replace(/^(\s*)\[@(\d+)\]\s/, '$1');
       } else {
         this.num = ++(this.parent.count);
@@ -1766,7 +1801,7 @@ var OlItem = Block.define({
       // Parse and remove the checkbox if present
       var chkbox = _U.ensure(line.match(/^\s*\[([ X-])\]\s/), [])[1];
       if (chkbox) {
-        this.chkbox = chkbox;
+        this.properties.checkbox = chkbox;
         line = line.replace(/^(\s*)\[[ X-]\]\s/, '$1');
       }
       // Push the modified line to parse the list item content
@@ -1777,7 +1812,7 @@ var OlItem = Block.define({
 
 
 module.exports = exports = OlItem;
-},{"../../utils":2,"../../block":5,"./_item":42}],25:[function(require,module,exports){
+},{"../../utils":2,"../../block":5,"./_item":42}],24:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 
@@ -1787,7 +1822,6 @@ var endRgxp = /^\s*:END:\s*$/i;
 var Drawers = Block.define({
   parent: Block,
   type: 'drawer',
-  registerLevel: 'low',
   match: function (lines) {
     return _U.ensure(_U.peak(lines), '').match(startRgxp);
   },
@@ -1805,6 +1839,36 @@ var Drawers = Block.define({
     }
   }
 });
+},{"../../utils":2,"../../block":5}],26:[function(require,module,exports){
+var _U      = require('../../utils');
+var Block   = require('../../block');
+
+var propRgxp = _U.rgxp.propLine;
+
+var PropDef = Block.define({
+  type: 'propdef',
+  match: function (lines, parent) {
+    var line = (_U.peak(lines) || '');
+    return !!line.match(propRgxp);
+  },
+  methods: {
+    consume: function (lines) {
+      var line = lines.pop();
+      this.raw = line;
+      var m = line.match(propRgxp);
+      var key = m[1];
+      var value = m[2];
+      var section = this.section();
+      if (section.properties[key]) {
+        section.properties[key] = section.properties[key] + '\n' + value;
+      } else {
+        section.properties[key] = value;
+      }
+    }
+  }
+});
+
+module.exports = exports = PropDef;
 },{"../../utils":2,"../../block":5}],27:[function(require,module,exports){
 var _U      = require('../../utils');
 var Block   = require('../../block');
@@ -1812,7 +1876,6 @@ var Block   = require('../../block');
 var CommentLine = Block.define({
   parent: Block,
   type: "commentline",
-  registerLevel: "high",
   match: function (lines, parent) {
     return (_U.peak(lines) || '').match(/^\s*#\s/);
   },
@@ -1873,18 +1936,19 @@ var _  = _U._;
 
 var TreeNode = function(parent){
   this.isTreeNode = true;
-  if (!parent) {
-    this.parent = null;
-    this.descendants = [];
-  } else {
-    this.parent = parent;
-    (this.root().descendants || []).push(this);
-  }
+  this.parent     = parent || null;
   this.id         = _U.id();
+  this.properties = {};
   this._children  = [];
 };
 
 TreeNode.prototype = {
+
+  setProperties: function (obj) {
+    _.assign(this.properties, obj);
+    // TODO: treat the '+' suffix for property names to append to an 
+    //       existing property 
+  },
 
   rootOrg: function () {
     var doc = this.document();
@@ -2142,6 +2206,36 @@ Lines.prototype = {
     return this.popWhile(/^\s*$/);
   },
 
+  properties: function () {
+    var result    = {};
+    var propRgxp  = _U.rgxp.propLine;
+    var propLines = this.popWhile(propRgxp);
+    propLines.each(function (l) {
+      var m = l.match(propRgxp);
+      var name = m[1].toLowerCase();
+      var value = m[2];
+      result[name] = value;
+    });
+    return result;
+  },
+
+  /**
+   * Return the next line which is not 
+   * @return {[type]} [description]
+   */
+  peakOverProperties: function () {
+    var lines    = this.asArray();
+    var propRgxp = _U.rgxp.propLine;
+    var result   = '';
+    _.each(lines, function (l) {
+      if (!l.match(propRgxp)) { 
+        result = l;
+        return false;
+      }
+    });
+    return result;
+  },
+
   push: function (arg) {
     if (_.isString(arg)) {
       this.arr.push(arg);
@@ -2150,6 +2244,10 @@ Lines.prototype = {
     } else {
       this.arr.push('');
     }
+  },
+
+  each: function (fn) {
+    _.each(this.asArray(), fn);
   }
 };
 
@@ -2196,7 +2294,7 @@ var BeginEnd = (function () {
 
   return Block.define({
     parent: Block,
-    type: "beginend",
+    type: 'beginend',
     match: function (lines, parent) {
       var beginRgxp = makeRgxp('begin', this.type);
       return _U.ensure(_U.peak(lines), '').match(beginRgxp);
@@ -2207,7 +2305,7 @@ var BeginEnd = (function () {
       consume: function (lines) {
         this.params(lines.pop());
         var endRgxp = makeRgxp('end', this.type);
-        this.content = lines.popUntil(endRgxp);
+        this.lines = lines.popUntil(endRgxp);
         lines.pop(); // Remove the end line
         lines.trimBlank();
         this.finalize();
@@ -2248,8 +2346,7 @@ List.define = function (obj) {
   var result = Block.define({
     parent       : Block,
     type         : obj.type,
-    registerLevel: obj.registerLevel,
-    match        : ItemType.match,
+    match        : obj.match || ItemType.match,
     methods      : methods
   });
 

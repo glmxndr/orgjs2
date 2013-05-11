@@ -15,7 +15,7 @@ describe 'Comment', ->
     expect(doc.content.children().length).toBe 1
     comment = doc.content.children()[0]
     expect(comment.type).toBe 'comment'
-    expect(comment.content.length()).toBe 2
-    lines = comment.content.asArray() 
+    expect(comment.lines.length()).toBe 2
+    lines = comment.lines.asArray() 
     expect(lines[0]).toBe 'this is'
     expect(lines[1]).toBe 'a comment'
