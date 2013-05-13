@@ -11,6 +11,11 @@
 #+EXPORT_SELECT_TAGS: export
 #+EXPORT_EXCLUDE_TAGS: noexport
 
+:DRAWER:
+  Some 
+  text.
+:END:
+
 Some header content. Some /emphasis/, some *bold text*, some _underlined
  text_, some ~verbatim text~, some =code text=, some +striken-
 through text+. 
