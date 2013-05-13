@@ -18,18 +18,9 @@
 
 Some header content. Some /emphasis/, some *bold text*, some _underlined
  text_, some ~verbatim text~, some =code text=, some +striken-
-through text+. 
+through text+, then some sub_script, son super^script, 
+some 10_{0.45} and some 10^{0.45}.
 
-  #+CAPTION: Higgs Boson discovery
-  [[./img/hb.jpg]]
-
-Some tricky stuff... /+/ oh and /+/.
-
-  #+BEGIN_CENTER
-  Centered text?
-  #+END_CENTER
-
-    [[./img/hb.jpg]]
 
   #+BEGIN_EXAMPLE
   metaDeclaration: /\s*#\+[A-Z0-9_]+:$/
@@ -203,3 +194,14 @@ broken here
 
 ***** Here also!
 
+
+  #+CAPTION: Higgs Boson discovery
+  [[./img/hb.jpg]]
+
+Some tricky stuff... /+/ oh and /+/.
+
+  #+BEGIN_CENTER
+  Centered text?
+  #+END_CENTER
+
+    [[./img/hb.jpg]]
