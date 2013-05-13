@@ -14,21 +14,20 @@
   "license": "MIT",
   "gitHead": "a62df93b7ba24ce0ac031ab5ba738d456cfeaaa3",
   "devDependencies": {
-    "jasmine-node": "~1.7.0",
-    "grunt": "~0.4.1",
-    "grunt-contrib-jasmine-node": "0.0.2",
-    "browserify": "~2.12.0",
-    "grunt-browserify": "~0.2.2",
     "uglify-js": "~2.2.5",
-    "grunt-contrib-uglify": "~0.2.0",
-    "grunt-contrib-jshint": "~0.4.3",
+    "browserify": "~2.12.0",
+    "jasmine-node": "~1.7.0",
     "jasmine-matchers": "~0.2.1",
+    "grunt": "~0.4.1",
+    "grunt-browserify": "~0.2.2",
+    "grunt-coffeeify": "~0.1.3",
     "grunt-contrib-coffee": "~0.7.0",
-    "grunt-coffeeify": "~0.1.3"
+    "grunt-contrib-jshint": "~0.4.3",
+    "grunt-contrib-uglify": "~0.2.0",
+    "grunt-contrib-jasmine-node": "0.0.2",
+    "grunt-exec": "~0.4.0"
   },
   "dependencies": {
-    "jison": "~0.4.4",
-    "lodash": "~1.2.0",
-    "JSONPath": "~0.9.1"
+    "lodash": "~1.2.0"
   }
 }
