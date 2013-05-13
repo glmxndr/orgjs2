@@ -105,7 +105,7 @@ Block.define = function (obj) {
 };
 
 module.exports = exports = Block;
-},{"./utils":6,"./tree":7}],8:[function(require,module,exports){
+},{"./tree":6,"./utils":7}],8:[function(require,module,exports){
 var _ = require('./utils')._;
 
 var Config = {};
@@ -129,81 +129,7 @@ Config.prepare = function (params) {
 };
 
 module.exports = exports = Config;
-},{"./utils":6}],9:[function(require,module,exports){
-(function(){var _U           = require('./utils');
-var RenderEngine = require('./render/engine');
-var HtmlMatchers = require('./render/default/html');
-var Block        = require('./block');
-var Inline       = require('./inline');
-
-var Org = function (obj) {
-  obj = obj || {};
-  this.config = require('./config').prepare(obj);
-  var that = this;
-  this.parse = {
-    headline: require('./block/headline').parser(that),
-    document: require('./document').parser(that),
-    inline: require('./inline').parser(that)
-  };
-
-  this.render = {
-    defaults: {
-      html: new RenderEngine({matchers: HtmlMatchers})
-    }
-  };
-};
-
-Org.prototype = {
-  parseDocument: function (content) {
-    return this.parse.document(content);
-  },
-  parseDocumentAt: function (location) {
-    return this.parseDocument(_U.load(location));
-  }
-};
-
-// Exposing components 
-// (and forcing them to load, so that they can plug themselves).
-Org.components = {
-  Document : require('./document'),
-  block: {
-    Hr         : Block.register( 100, require('./block/special/hr')),
-    FnDef      : Block.register( 200, require('./block/special/fndef')),
-    Example    : Block.register( 300, require('./block/beginend/example')),
-    Quote      : Block.register( 300, require('./block/beginend/quote')),
-    Center     : Block.register( 300, require('./block/beginend/center')),
-    Comment    : Block.register( 300, require('./block/beginend/comment')),
-    Verse      : Block.register( 300, require('./block/beginend/verse')),
-    Src        : Block.register( 300, require('./block/beginend/src')),
-    Dlist      : Block.register( 500, require('./block/lists/dlist')),
-    DlItem     : Block.register( 510, require('./block/lists/dlitem')),
-    Ulist      : Block.register( 520, require('./block/lists/ulist')),
-    UlItem     : Block.register( 530, require('./block/lists/ulitem')),
-    Olist      : Block.register( 540, require('./block/lists/olist')),
-    OlItem     : Block.register( 550, require('./block/lists/olitem')),
-    Drawer     : Block.register(1000, require('./block/special/drawer')),
-    Section    : Block.register(8000, require('./block/section')),
-    PropDef    : Block.register(8500, require('./block/properties/propdef')),
-    CommentLine: Block.register(9000, require('./block/special/commentline')),
-    Para       : Block.register(9999, require('./block/para'))
-  },
-  inline: {
-    Link    : Inline.register( 100, require('./inline/link')),
-    Latex   : Inline.register( 200, require('./inline/latex')),
-    FnRef   : Inline.register( 300, require('./inline/fnref')),
-    Entity  : Inline.register( 400, require('./inline/entity')),
-    Verbatim: Inline.register( 500, require('./inline/verbatim')),
-    Emphasis: Inline.register(1000, require('./inline/emphasis')),
-    Regular : Inline.register(9999, require('./inline/regular'))
-  }
-};
-
-var global = (function(){return this;}());
-global.Org = Org;
-
-module.exports = exports = Org;
-})()
-},{"./utils":6,"./render/engine":10,"./render/default/html":11,"./block":5,"./inline":12,"./config":8,"./block/headline":13,"./document":14,"./block/special/hr":15,"./block/special/fndef":16,"./block/beginend/example":17,"./block/beginend/quote":18,"./block/beginend/center":19,"./block/beginend/comment":20,"./block/beginend/verse":21,"./block/beginend/src":22,"./block/lists/dlist":23,"./block/lists/dlitem":24,"./block/lists/ulist":25,"./block/lists/ulitem":26,"./block/lists/olist":27,"./block/lists/olitem":28,"./block/special/drawer":29,"./block/section":30,"./block/properties/propdef":31,"./block/special/commentline":32,"./block/para":33,"./inline/link":34,"./inline/latex":35,"./inline/fnref":36,"./inline/entity":37,"./inline/verbatim":38,"./inline/emphasis":39,"./inline/regular":40}],14:[function(require,module,exports){
+},{"./utils":7}],9:[function(require,module,exports){
 var _U      = require('./utils');
 var Block   = require('./block');
 var Section = require('./block/section');
@@ -257,77 +183,7 @@ Document.parser = function (org) {
 };
 
 module.exports = exports = Document;
-},{"./utils":6,"./block":5,"./block/section":30,"./config":8,"./block/lines":41,"./core":9}],12:[function(require,module,exports){
-var _U       = require('./utils');
-var _        = _U._;
-var Lines    = require('./block/lines');
-var TreeNode = require('./tree');
-
-var Inline = function (parent) {
-  TreeNode.call(this, parent);
-};
-
-_U.extendProto(Inline, TreeNode, {
-  init         : function () {},
-  document     : function () { return this.root(); }
-});
-
-//------------------------------------------------------------------------------
-
-var prec = Inline.precedence = {};
-
-/**
- * Allows to register a new Block constructor at a given precedence level.
- * @param  {Block} Constr the block constructor
- * @param  {String} level  the level name, must be present in Block.levels
- */
-Inline.register = function (level, Constr) {
-  if (prec[level]) {Inline.register(level + 1, Constr);}
-  else { prec[level] = Constr; }
-  return Constr;
-};
-
-//------------------------------------------------------------------------------
-
-Inline.define = function (obj) {
-  var Parent = obj.parent || Inline;
-  var Result = function () {
-    Parent.apply(this, arguments);
-    this.type = obj.type;
-    if (this.init) { this.init.apply(this, arguments); }
-  };
-  Result.type = obj.type;
-  Result.replace = obj.replace || Parent.replace || function () { return ""; };
-  _U.extendProto(Result, Parent, obj.methods);
-  return Result;
-};
-
-//------------------------------------------------------------------------------
-
-Inline.parser = function (conf) {
-  return function (lines, parent, tp, tokens) {
-    var raw = _.isString(lines) ? lines : new Lines(lines).asString();
-    var txt = raw;
-
-    tp = tp || _U.absentToken(txt);
-    tokens = tokens || {};
-    _.each(_U.ordered(prec), function(Constr){ 
-      txt = Constr.replace(txt, parent, tp, tokens);
-    });
-
-    var result = [];
-    txt.replace(new RegExp(tp + ':\\d+;', 'g'), function (m) {
-      result.push(tokens[m]);
-      return "";
-    });
-    return result;
-  };
-};
-
-//------------------------------------------------------------------------------
-
-module.exports = exports = Inline;
-},{"./utils":6,"./block/lines":41,"./tree":7}],7:[function(require,module,exports){
+},{"./block/section":10,"./utils":7,"./config":8,"./block":5,"./block/lines":11,"./core":12}],6:[function(require,module,exports){
 var _U = require('./utils');
 var _  = _U._;
 
@@ -515,7 +371,7 @@ TreeNode.prototype = {
 };
 
 module.exports = exports = TreeNode;
-},{"./utils":6,"./core":9}],6:[function(require,module,exports){
+},{"./utils":7,"./core":12}],7:[function(require,module,exports){
 (function(){require('./shim');
 
 dependency = function (name, alternate) {
@@ -737,7 +593,82 @@ _U.id = _U.incrementor();
 
 module.exports = exports = _U;
 })()
-},{"./shim":4}],42:[function(require,module,exports){
+},{"./shim":4}],12:[function(require,module,exports){
+(function(){var _U           = require('./utils');
+var RenderEngine = require('./render/engine');
+var HtmlMatchers = require('./render/default/html');
+var Block        = require('./block');
+var Inline       = require('./inline');
+
+var Org = function (obj) {
+  obj = obj || {};
+  this.config = require('./config').prepare(obj);
+  var that = this;
+  this.parse = {
+    headline: require('./block/headline').parser(that),
+    document: require('./document').parser(that),
+    inline: require('./inline').parser(that)
+  };
+
+  this.render = {
+    defaults: {
+      html: new RenderEngine({matchers: HtmlMatchers})
+    }
+  };
+};
+
+Org.prototype = {
+  parseDocument: function (content) {
+    return this.parse.document(content);
+  },
+  parseDocumentAt: function (location) {
+    return this.parseDocument(_U.load(location));
+  }
+};
+
+// Exposing components 
+// (and forcing them to load, so that they can plug themselves).
+Org.components = {
+  Document : require('./document'),
+  block: {
+    Hr         : Block.register( 100, require('./block/special/hr')),
+    FnDef      : Block.register( 200, require('./block/special/fndef')),
+    Example    : Block.register( 300, require('./block/beginend/example')),
+    Quote      : Block.register( 300, require('./block/beginend/quote')),
+    Center     : Block.register( 300, require('./block/beginend/center')),
+    Comment    : Block.register( 300, require('./block/beginend/comment')),
+    Verse      : Block.register( 300, require('./block/beginend/verse')),
+    Src        : Block.register( 300, require('./block/beginend/src')),
+    Dlist      : Block.register( 500, require('./block/lists/dlist')),
+    DlItem     : Block.register( 510, require('./block/lists/dlitem')),
+    Ulist      : Block.register( 520, require('./block/lists/ulist')),
+    UlItem     : Block.register( 530, require('./block/lists/ulitem')),
+    Olist      : Block.register( 540, require('./block/lists/olist')),
+    OlItem     : Block.register( 550, require('./block/lists/olitem')),
+    Drawer     : Block.register(1000, require('./block/special/drawer')),
+    Section    : Block.register(8000, require('./block/section')),
+    PropDef    : Block.register(8500, require('./block/properties/propdef')),
+    CommentLine: Block.register(9000, require('./block/special/commentline')),
+    Para       : Block.register(9999, require('./block/para'))
+  },
+  inline: {
+    Link      : Inline.register( 100, require('./inline/link')),
+    Latex     : Inline.register( 200, require('./inline/latex')),
+    FnRef     : Inline.register( 300, require('./inline/fnref')),
+    Entity    : Inline.register( 400, require('./inline/entity')),
+    Verbatim  : Inline.register( 500, require('./inline/verbatim')),
+    Emphasis  : Inline.register(1000, require('./inline/emphasis')),
+    Linebreak : Inline.register(1100, require('./inline/linebreak')),
+    Regular   : Inline.register(9999, require('./inline/regular'))
+  }
+};
+
+var global = (function(){return this;}());
+global.Org = Org;
+
+module.exports = exports = Org;
+})()
+},{"./utils":7,"./render/default/html":13,"./render/engine":14,"./inline":15,"./config":8,"./block/headline":16,"./document":9,"./block/special/hr":17,"./block/special/fndef":18,"./block/beginend/example":19,"./block/beginend/quote":20,"./block/beginend/center":21,"./block/beginend/comment":22,"./block/beginend/verse":23,"./block/beginend/src":24,"./block/lists/dlist":25,"./block/lists/ulitem":26,"./block/lists/ulist":27,"./block/lists/olist":28,"./block/lists/olitem":29,"./block/special/drawer":30,"./block/section":10,"./block/properties/propdef":31,"./block/special/commentline":32,"./block/para":33,"./inline/link":34,"./inline/latex":35,"./inline/entity":36,"./inline/verbatim":37,"./inline/emphasis":38,"./inline/linebreak":39,"./inline/regular":40,"./block/lists/dlitem":41,"./inline/fnref":42,"./block":5}],43:[function(require,module,exports){
 (function() {
   var Org;
 
@@ -785,7 +716,77 @@ module.exports = exports = _U;
 }).call(this);
 
 
-},{"../src/core":9}],43:[function(require,module,exports){
+},{"../src/core":12}],15:[function(require,module,exports){
+var _U       = require('./utils');
+var _        = _U._;
+var Lines    = require('./block/lines');
+var TreeNode = require('./tree');
+
+var Inline = function (parent) {
+  TreeNode.call(this, parent);
+};
+
+_U.extendProto(Inline, TreeNode, {
+  init         : function () {},
+  document     : function () { return this.root(); }
+});
+
+//------------------------------------------------------------------------------
+
+var prec = Inline.precedence = {};
+
+/**
+ * Allows to register a new Block constructor at a given precedence level.
+ * @param  {Block} Constr the block constructor
+ * @param  {String} level  the level name, must be present in Block.levels
+ */
+Inline.register = function (level, Constr) {
+  if (prec[level]) {Inline.register(level + 1, Constr);}
+  else { prec[level] = Constr; }
+  return Constr;
+};
+
+//------------------------------------------------------------------------------
+
+Inline.define = function (obj) {
+  var Parent = obj.parent || Inline;
+  var Result = function () {
+    Parent.apply(this, arguments);
+    this.type = obj.type;
+    if (this.init) { this.init.apply(this, arguments); }
+  };
+  Result.type = obj.type;
+  Result.replace = obj.replace || Parent.replace || function () { return ""; };
+  _U.extendProto(Result, Parent, obj.methods);
+  return Result;
+};
+
+//------------------------------------------------------------------------------
+
+Inline.parser = function (conf) {
+  return function (lines, parent, tp, tokens) {
+    var raw = _.isString(lines) ? lines : new Lines(lines).asString();
+    var txt = raw;
+
+    tp = tp || _U.absentToken(txt);
+    tokens = tokens || {};
+    _.each(_U.ordered(prec), function(Constr){ 
+      txt = Constr.replace(txt, parent, tp, tokens);
+    });
+
+    var result = [];
+    txt.replace(new RegExp(tp + ':\\d+;', 'g'), function (m) {
+      result.push(tokens[m]);
+      return "";
+    });
+    return result;
+  };
+};
+
+//------------------------------------------------------------------------------
+
+module.exports = exports = Inline;
+},{"./utils":7,"./block/lines":11,"./tree":6}],44:[function(require,module,exports){
 var _U      = require('../utils');
 var Block   = require('../block');
 
@@ -810,7 +811,7 @@ _U.extendProto(Content, Block, {
 });
 
 module.exports = exports = Content;
-},{"../utils":6,"../block":5}],13:[function(require,module,exports){
+},{"../utils":7,"../block":5}],16:[function(require,module,exports){
 var _U     = require('../utils');
 var Config = require('../config');
 var Org    = require('../core');
@@ -860,7 +861,7 @@ Headline.parser = function (org) {
 };
 
 module.exports = exports = Headline;
-},{"../utils":6,"../config":8,"../core":9,"../block":5}],41:[function(require,module,exports){
+},{"../utils":7,"../config":8,"../core":12,"../block":5}],11:[function(require,module,exports){
 var _U = require('../utils');
 var _  = _U._;
 
@@ -994,7 +995,7 @@ Lines.prototype = {
 };
 
 module.exports = exports = Lines;
-},{"../utils":6}],33:[function(require,module,exports){
+},{"../utils":7}],33:[function(require,module,exports){
 var _U      = require('../utils');
 var Block   = require('../block');
 var Lines   = require('./lines');
@@ -1037,7 +1038,7 @@ var Para = Block.define({
 });
 
 module.exports = exports = Para;
-},{"../utils":6,"../block":5,"./lines":41}],30:[function(require,module,exports){
+},{"../utils":7,"../block":5,"./lines":11}],10:[function(require,module,exports){
 var _U = require('../utils');
 var _  = _U._;
 
@@ -1085,7 +1086,7 @@ _U.extendProto(Section, Block, {
 });
 
 module.exports = exports = Section;
-},{"../utils":6,"../block":5,"./content":43}],39:[function(require,module,exports){
+},{"../utils":7,"./content":44,"../block":5}],38:[function(require,module,exports){
 var _U = require('../utils');
 var Inline = require('../inline');
 
@@ -1135,7 +1136,67 @@ Emphasis.types = {
 };
 
 module.exports = exports = Emphasis;
-},{"../utils":6,"../inline":12}],37:[function(require,module,exports){
+},{"../utils":7,"../inline":15}],39:[function(require,module,exports){
+var _U     = require('../utils');
+var Inline = require('../inline');
+
+var Linebreak = Inline.define({
+  type: 'linebreak',
+  replace: function (txt, parent, tp, tokens) {
+    txt = txt.replace(/\\\\$/mg, function (m, e) {
+      var lb        = new Linebreak(parent);
+      var token     = _U.newToken(tp);
+      tokens[token] = lb;
+      return token;
+    });
+    return txt;
+  }
+});
+
+module.exports = exports = Linebreak;
+},{"../utils":7,"../inline":15}],35:[function(require,module,exports){
+var _U     = require('../utils');
+var _      = _U._;
+var Inline = require('../inline');
+
+var Latex = Inline.define({
+  type: 'latex',
+  replace: function (txt, parent, tp, tokens) {
+    var regexps = [
+      /(^|[\s\S]*[^\\])((\$\$)([\s\S]*?[^\\])\$\$)/g,
+      /(^|[\s\S]*[^\\])((\$)([^\s][\s\S]*?[^\s\\]|[^\s\\])\$)/g,
+      /(^|[\s\S]*[^\\])((\\\()([\s\S]*?[^\\])\\\))/g,
+      /(^|[\s\S]*[^\\])((\\\[)([\s\S]*?[^\\])\\\])/g
+    ];
+    _.each(regexps, function (rgxp) {
+      var replaceFn = function () {
+        var a     = arguments;
+        var pre   = a[1];
+        var raw   = a[2];
+        var type  = a[3] || "";
+        var inner = a[4] || "";
+        var token = "";
+        if (raw) {
+          var latex     = new Latex(parent);
+          latex.raw     = raw;
+          latex.content = inner;
+          token         = _U.newToken(tp);
+          tokens[token] = latex;
+        }
+        return pre + token;
+      };
+      do {
+        txt = txt.replace(rgxp, replaceFn);
+      } while (rgxp.exec(txt));
+    });
+    return txt;
+  }
+});
+
+module.exports = exports = Latex;
+
+
+},{"../utils":7,"../inline":15}],36:[function(require,module,exports){
 var _U     = require('../utils');
 var Inline = require('../inline');
 
@@ -1147,7 +1208,7 @@ var Entity = Inline.define({
       var entity     = new Entity(parent);
       entity.raw     = m;
       entity.content = Entity.store[e];
-      token          = _U.newToken(tp);
+      var token      = _U.newToken(tp);
       tokens[token]  = entity;
       return token;
     });
@@ -1549,7 +1610,7 @@ define("Diamond","\\diamond","&diamond;","[diamond]","[diamond]","⋄");
 define("loz","\\diamond","&loz;","[lozenge]","[lozenge]","◊");
 
 module.exports = exports = Entity;
-},{"../utils":6,"../inline":12}],36:[function(require,module,exports){
+},{"../utils":7,"../inline":15}],42:[function(require,module,exports){
 var _U     = require('../utils');
 var Inline = require('../inline');
 var FnDef  = require('../block/special/fndef');
@@ -1590,49 +1651,7 @@ var FnRef = Inline.define({
 });
 
 module.exports = exports = FnRef;
-},{"../utils":6,"../inline":12,"../block/special/fndef":16,"../block/lines":41}],35:[function(require,module,exports){
-var _U     = require('../utils');
-var _      = _U._;
-var Inline = require('../inline');
-
-var Latex = Inline.define({
-  type: 'latex',
-  replace: function (txt, parent, tp, tokens) {
-    var regexps = [
-      /(^|[\s\S]*[^\\])((\$\$)([\s\S]*?[^\\])\$\$)/g,
-      /(^|[\s\S]*[^\\])((\$)([^\s][\s\S]*?[^\s\\]|[^\s\\])\$)/g,
-      /(^|[\s\S]*[^\\])((\\\()([\s\S]*?[^\\])\\\))/g,
-      /(^|[\s\S]*[^\\])((\\\[)([\s\S]*?[^\\])\\\])/g
-    ];
-    _.each(regexps, function (rgxp) {
-      var replaceFn = function () {
-        var a     = arguments;
-        var pre   = a[1];
-        var raw   = a[2];
-        var type  = a[3] || "";
-        var inner = a[4] || "";
-        var token = "";
-        if (raw) {
-          var latex     = new Latex(parent);
-          latex.raw     = raw;
-          latex.content = inner;
-          token         = _U.newToken(tp);
-          tokens[token] = latex;
-        }
-        return pre + token;
-      };
-      do {
-        txt = txt.replace(rgxp, replaceFn);
-      } while (rgxp.exec(txt));
-    });
-    return txt;
-  }
-});
-
-module.exports = exports = Latex;
-
-
-},{"../utils":6,"../inline":12}],34:[function(require,module,exports){
+},{"../utils":7,"../inline":15,"../block/special/fndef":18,"../block/lines":11}],34:[function(require,module,exports){
 var _U     = require('../utils');
 var _      = _U._;
 var Inline = require('../inline');
@@ -1663,7 +1682,7 @@ var Link = Inline.define({
 
 module.exports = exports = Link;
 
-},{"../utils":6,"../inline":12}],40:[function(require,module,exports){
+},{"../utils":7,"../inline":15}],40:[function(require,module,exports){
 var _U     = require('../utils');
 var _      = _U._;
 var Inline = require('../inline');
@@ -1686,7 +1705,7 @@ var Regular = Inline.define({
 });
 
 module.exports = exports = Regular;
-},{"../utils":6,"../inline":12}],38:[function(require,module,exports){
+},{"../utils":7,"../inline":15}],37:[function(require,module,exports){
 var _U = require('../utils');
 var Inline = require('../inline');
 
@@ -1736,49 +1755,7 @@ var Code = verbTypes['='] = Inline.define({
 Verbatim.types = verbTypes;
 
 module.exports = exports = Verbatim;
-},{"../utils":6,"../inline":12}],10:[function(require,module,exports){
-var _U       = require('../utils');
-var _        = _U._;
-var JSONPath = _U.dependency('JSONPath', 'jsonPath');
-var TreeNode = require('../tree');
-
-var RenderEngine = function (obj) {
-  obj = obj || {};
-  var defaults = obj.defaults || {};
-  this.matchers = _.defaults(defaults, obj.matchers);
-};
-
-var empty = function () { return ''; };
-
-RenderEngine.prototype = {
-  getRenderer: function (node) {
-    var renderFn = this.matchers[node.type] || empty;
-    return _.bind(renderFn, node);
-  },
-  render: function (doc) {
-    var engine = this;
-    var render = function renderCb (node) {
-      if (node === null || node === void 0) {
-        _U.log.error('Ignoring render for wrong value', node);
-        return '';
-      }
-      else if (_.isArray(node)) {
-        return _U.join.apply(engine, _.map(node, render));
-      } else if (node.isTreeNode) {
-        return engine.getRenderer(node)(render, node);
-      } else {
-        _U.log.info('Rendering non-treenode object', '' + node);
-        return '' + node;
-      }
-    };
-
-    return engine.getRenderer(doc)(render, doc);
-  }
-};
-
-module.exports = exports = RenderEngine;
-
-},{"../utils":6,"../tree":7}],44:[function(require,module,exports){
+},{"../inline":15,"../utils":7}],45:[function(require,module,exports){
 var _U    = require('../../utils');
 var _     = _U._;
 var Block = require('../../block');
@@ -1818,7 +1795,7 @@ var BeginEnd = (function () {
 }());
 
 module.exports = exports = BeginEnd;
-},{"../../utils":6,"../../block":5}],19:[function(require,module,exports){
+},{"../../block":5,"../../utils":7}],21:[function(require,module,exports){
 var Block    = require('../../block');
 var BeginEnd = require('./beginend');
 
@@ -1829,7 +1806,7 @@ var Center = Block.define({
 });
 
 module.exports = exports = Center;
-},{"../../block":5,"./beginend":44}],20:[function(require,module,exports){
+},{"../../block":5,"./beginend":45}],22:[function(require,module,exports){
 var Block    = require('../../block');
 var BeginEnd = require('./beginend');
 
@@ -1840,7 +1817,7 @@ var Comment = Block.define({
 });
 
 module.exports = exports = Comment;
-},{"../../block":5,"./beginend":44}],17:[function(require,module,exports){
+},{"../../block":5,"./beginend":45}],19:[function(require,module,exports){
 var Block    = require('../../block');
 var BeginEnd = require('./beginend');
 
@@ -1851,7 +1828,24 @@ var Example = Block.define({
 });
 
 module.exports = exports = Example;
-},{"../../block":5,"./beginend":44}],18:[function(require,module,exports){
+},{"../../block":5,"./beginend":45}],24:[function(require,module,exports){
+var Block    = require('../../block');
+var BeginEnd = require('./beginend');
+
+var Src = Block.define({
+  parent: BeginEnd,
+  type: 'src',
+  methods: {
+    params: function (line) {
+      var match = /^\s*#\+begin_src\s+([a-z\-]+)(?:\s|$)/i.exec(line);
+      this.language = match ? match[1] : null;
+      // TODO: deal with switches (see org doc 11.3)
+    }
+  }
+});
+
+module.exports = exports = Src;
+},{"./beginend":45,"../../block":5}],20:[function(require,module,exports){
 var Block    = require('../../block');
 var BeginEnd = require('./beginend');
 
@@ -1874,54 +1868,7 @@ var Quote = Block.define({
 });
 
 module.exports = exports = Quote;
-},{"../../block":5,"./beginend":44}],22:[function(require,module,exports){
-var Block    = require('../../block');
-var BeginEnd = require('./beginend');
-
-var Src = Block.define({
-  parent: BeginEnd,
-  type: 'src',
-  methods: {
-    params: function (line) {
-      var match = /^\s*#\+begin_src\s+([a-z\-]+)(?:\s|$)/i.exec(line);
-      this.language = match ? match[1] : null;
-      // TODO: deal with switches (see org doc 11.3)
-    }
-  }
-});
-
-module.exports = exports = Src;
-},{"../../block":5,"./beginend":44}],21:[function(require,module,exports){
-var Block    = require('../../block');
-var BeginEnd = require('./beginend');
-
-var Verse = Block.define({
-  parent: BeginEnd,
-  type: 'verse',
-  methods: {
-    params: function (line) {
-      this.indent = /^(\s*)/.exec(line || '')[1].length;
-    },
-    finalize: function () {
-      var lines = this.lines.asArray();
-      var lastLine = lines.pop();
-      var m = lastLine && (lastLine.match(/^\s*--\s+(.*)\s*$/));
-      if(m) {
-        this.signature = this.parseInline(m[1]);
-      } else {
-        lines.push(lastLine);
-      }
-      var i = this.indent;
-      var rgxp = new RegExp('^ {' + this.indent + '}');
-      lines = _.map(lines, function (l) { return l.replace(rgxp, ''); });
-      this.content = this.parseInline(lines.join('\n'));
-    }
-
-  }
-});
-
-module.exports = exports = Verse;
-},{"../../block":5,"./beginend":44}],45:[function(require,module,exports){
+},{"../../block":5,"./beginend":45}],46:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 
@@ -1946,7 +1893,23 @@ var Item = Block.define({
 });
 
 module.exports = exports = Item;
-},{"../../utils":6,"../../block":5}],46:[function(require,module,exports){
+},{"../../block":5,"../../utils":7}],25:[function(require,module,exports){
+var _U    = require('../../utils');
+var Block = require('../../block');
+var List  = require('./_list');
+
+var DlItem = require('./dlitem');
+
+var Dlist = List.define({
+  itemType: DlItem,
+  type: 'dl',
+  methods: {
+    prepare: function (lines) {}
+  }
+});
+
+module.exports = exports = Dlist;
+},{"../../block":5,"./_list":47,"../../utils":7,"./dlitem":41}],47:[function(require,module,exports){
 var _U    = require('../../utils');
 var _     = _U._;
 var Block = require('../../block');
@@ -1983,23 +1946,7 @@ List.define = function (obj) {
 };
 
 module.exports = exports = List;
-},{"../../utils":6,"../../block":5}],23:[function(require,module,exports){
-var _U    = require('../../utils');
-var Block = require('../../block');
-var List  = require('./_list');
-
-var DlItem = require('./dlitem');
-
-var Dlist = List.define({
-  itemType: DlItem,
-  type: 'dl',
-  methods: {
-    prepare: function (lines) {}
-  }
-});
-
-module.exports = exports = Dlist;
-},{"../../utils":6,"../../block":5,"./_list":46,"./dlitem":24}],24:[function(require,module,exports){
+},{"../../utils":7,"../../block":5}],41:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 var Item  = require('./_item') ;
@@ -2028,41 +1975,7 @@ var DlItem = Block.define({
 });
 
 module.exports = exports = DlItem;
-},{"../../utils":6,"../../block":5,"./_item":45}],27:[function(require,module,exports){
-var _U    = require('../../utils');
-var Block = require('../../block');
-var List  = require('./_list');
-
-var OlItem = require('./olitem');
-
-var olRgxp = /^(\s*)\d+[\.)]\s/;
-
-var Olist = List.define({
-  itemType: OlItem,
-  type: 'ol',
-  match: function (lines, parent) {
-    var line = lines.peakOverProperties();
-    return line.match(olRgxp);
-  },
-  methods: {
-    prepare: function (lines) { this.count = 0; },
-    consume: function (lines) {
-      var props = lines.properties();
-      this.setProperties(props);
-
-      this.indent = _U.indentLevel(lines.peak());
-      this.prepare(lines);
-      do {
-        var item = new OlItem(this);
-        this.append(item);
-        item.consume(lines);
-      } while (this.accepts(lines));
-    }
-  }
-});
-
-module.exports = exports = Olist;
-},{"../../utils":6,"../../block":5,"./_list":46,"./olitem":28}],28:[function(require,module,exports){
+},{"../../utils":7,"./_item":46,"../../block":5}],29:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 var Item  = require('./_item') ;
@@ -2104,7 +2017,7 @@ var OlItem = Block.define({
 
 
 module.exports = exports = OlItem;
-},{"../../utils":6,"../../block":5,"./_item":45}],25:[function(require,module,exports){
+},{"../../utils":7,"../../block":5,"./_item":46}],27:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 var List  = require('./_list');
@@ -2120,7 +2033,41 @@ var Ulist = List.define({
 });
 
 module.exports = exports = Ulist;
-},{"../../utils":6,"../../block":5,"./_list":46,"./ulitem":26}],26:[function(require,module,exports){
+},{"../../utils":7,"../../block":5,"./_list":47,"./ulitem":26}],28:[function(require,module,exports){
+var _U    = require('../../utils');
+var Block = require('../../block');
+var List  = require('./_list');
+
+var OlItem = require('./olitem');
+
+var olRgxp = /^(\s*)\d+[\.)]\s/;
+
+var Olist = List.define({
+  itemType: OlItem,
+  type: 'ol',
+  match: function (lines, parent) {
+    var line = lines.peakOverProperties();
+    return line.match(olRgxp);
+  },
+  methods: {
+    prepare: function (lines) { this.count = 0; },
+    consume: function (lines) {
+      var props = lines.properties();
+      this.setProperties(props);
+
+      this.indent = _U.indentLevel(lines.peak());
+      this.prepare(lines);
+      do {
+        var item = new OlItem(this);
+        this.append(item);
+        item.consume(lines);
+      } while (this.accepts(lines));
+    }
+  }
+});
+
+module.exports = exports = Olist;
+},{"../../block":5,"./_list":47,"./olitem":29,"../../utils":7}],26:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 var Item  = require('./_item');
@@ -2152,7 +2099,7 @@ var UlItem = Block.define({
 });
 
 module.exports = exports = UlItem;
-},{"../../utils":6,"../../block":5,"./_item":45}],31:[function(require,module,exports){
+},{"../../utils":7,"../../block":5,"./_item":46}],31:[function(require,module,exports){
 var _U      = require('../../utils');
 var Block   = require('../../block');
 
@@ -2182,7 +2129,49 @@ var PropDef = Block.define({
 });
 
 module.exports = exports = PropDef;
-},{"../../utils":6,"../../block":5}],32:[function(require,module,exports){
+},{"../../utils":7,"../../block":5}],14:[function(require,module,exports){
+var _U       = require('../utils');
+var _        = _U._;
+var JSONPath = _U.dependency('JSONPath', 'jsonPath');
+var TreeNode = require('../tree');
+
+var RenderEngine = function (obj) {
+  obj = obj || {};
+  var defaults = obj.defaults || {};
+  this.matchers = _.defaults(defaults, obj.matchers);
+};
+
+var empty = function () { return ''; };
+
+RenderEngine.prototype = {
+  getRenderer: function (node) {
+    var renderFn = this.matchers[node.type] || empty;
+    return _.bind(renderFn, node);
+  },
+  render: function (doc) {
+    var engine = this;
+    var render = function renderCb (node) {
+      if (node === null || node === void 0) {
+        _U.log.error('Ignoring render for wrong value', node);
+        return '';
+      }
+      else if (_.isArray(node)) {
+        return _U.join.apply(engine, _.map(node, render));
+      } else if (node.isTreeNode) {
+        return engine.getRenderer(node)(render, node);
+      } else {
+        _U.log.info('Rendering non-treenode object', '' + node);
+        return '' + node;
+      }
+    };
+
+    return engine.getRenderer(doc)(render, doc);
+  }
+};
+
+module.exports = exports = RenderEngine;
+
+},{"../utils":7,"../tree":6}],32:[function(require,module,exports){
 var _U      = require('../../utils');
 var Block   = require('../../block');
 
@@ -2201,7 +2190,7 @@ var CommentLine = Block.define({
 });
 
 module.exports = exports = CommentLine;
-},{"../../utils":6,"../../block":5}],29:[function(require,module,exports){
+},{"../../utils":7,"../../block":5}],30:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 
@@ -2228,7 +2217,37 @@ var Drawers = Block.define({
     }
   }
 });
-},{"../../utils":6,"../../block":5}],16:[function(require,module,exports){
+},{"../../block":5,"../../utils":7}],23:[function(require,module,exports){
+var Block    = require('../../block');
+var BeginEnd = require('./beginend');
+
+var Verse = Block.define({
+  parent: BeginEnd,
+  type: 'verse',
+  methods: {
+    params: function (line) {
+      this.indent = /^(\s*)/.exec(line || '')[1].length;
+    },
+    finalize: function () {
+      var lines = this.lines.asArray();
+      var lastLine = lines.pop();
+      var m = lastLine && (lastLine.match(/^\s*--\s+(.*)\s*$/));
+      if(m) {
+        this.signature = this.parseInline(m[1]);
+      } else {
+        lines.push(lastLine);
+      }
+      var i = this.indent;
+      var rgxp = new RegExp('^ {' + this.indent + '}');
+      lines = _.map(lines, function (l) { return l.replace(rgxp, ''); });
+      this.content = this.parseInline(lines.join('\n'));
+    }
+
+  }
+});
+
+module.exports = exports = Verse;
+},{"../../block":5,"./beginend":45}],18:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 
@@ -2272,7 +2291,7 @@ var FnDef = Block.define({
 });
 
 module.exports = exports = FnDef;
-},{"../../utils":6,"../../block":5}],15:[function(require,module,exports){
+},{"../../block":5,"../../utils":7}],17:[function(require,module,exports){
 var _U      = require('../../utils');
 var Block   = require('../../block');
 
@@ -2291,7 +2310,7 @@ var Hr = Block.define({
 });
 
 module.exports = exports = Hr;
-},{"../../utils":6,"../../block":5}],11:[function(require,module,exports){
+},{"../../utils":7,"../../block":5}],13:[function(require,module,exports){
 var _U = require('../../utils');
 var j  = _U.join;
 
@@ -2413,6 +2432,7 @@ var defaultHtmlMatchers = {
   strike: tagchildren('s'),
 
   entity: function (r) { return this.content.html; },
+  linebreak: function (r) { return '<br/>'; },
   fnref: function (r, fnref) {
     var n;
     try { n = this.document().footnoteByName(fnref.name).number; }
@@ -2433,7 +2453,7 @@ var defaultHtmlMatchers = {
 };
 
 module.exports = exports = defaultHtmlMatchers;
-},{"../../utils":6}],47:[function(require,module,exports){
+},{"../../utils":7}],48:[function(require,module,exports){
 (function() {
   var Block, Config, Org, _, _U;
 
@@ -2459,7 +2479,7 @@ module.exports = exports = defaultHtmlMatchers;
 }).call(this);
 
 
-},{"../src/utils":6,"../src/core":9,"../src/config":8,"../src/block":5,"jasmine-matchers":48}],49:[function(require,module,exports){
+},{"../src/utils":7,"../src/core":12,"../src/config":8,"../src/block":5,"jasmine-matchers":49}],50:[function(require,module,exports){
 (function() {
   var Config;
 
@@ -2496,7 +2516,7 @@ module.exports = exports = defaultHtmlMatchers;
 }).call(this);
 
 
-},{"../src/config":8,"jasmine-matchers":48}],50:[function(require,module,exports){
+},{"../src/config":8,"jasmine-matchers":49}],51:[function(require,module,exports){
 (function() {
   var TreeNode, ids, _, _U;
 
@@ -2579,7 +2599,7 @@ module.exports = exports = defaultHtmlMatchers;
 }).call(this);
 
 
-},{"../src/utils":6,"../src/tree":7,"jasmine-matchers":48}],51:[function(require,module,exports){
+},{"../src/utils":7,"../src/tree":6,"jasmine-matchers":49}],52:[function(require,module,exports){
 (function() {
   var _U;
 
@@ -2661,7 +2681,83 @@ module.exports = exports = defaultHtmlMatchers;
 }).call(this);
 
 
-},{"../src/utils":6,"jasmine-matchers":48}],52:[function(require,module,exports){
+},{"../src/utils":7,"jasmine-matchers":49}],53:[function(require,module,exports){
+// shim for using process in browser
+
+var process = module.exports = {};
+
+process.nextTick = (function () {
+    var canSetImmediate = typeof window !== 'undefined'
+    && window.setImmediate;
+    var canPost = typeof window !== 'undefined'
+    && window.postMessage && window.addEventListener
+    ;
+
+    if (canSetImmediate) {
+        return function (f) { return window.setImmediate(f) };
+    }
+
+    if (canPost) {
+        var queue = [];
+        window.addEventListener('message', function (ev) {
+            if (ev.source === window && ev.data === 'process-tick') {
+                ev.stopPropagation();
+                if (queue.length > 0) {
+                    var fn = queue.shift();
+                    fn();
+                }
+            }
+        }, true);
+
+        return function nextTick(fn) {
+            queue.push(fn);
+            window.postMessage('process-tick', '*');
+        };
+    }
+
+    return function nextTick(fn) {
+        setTimeout(fn, 0);
+    };
+})();
+
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+
+process.binding = function (name) {
+    throw new Error('process.binding is not supported');
+}
+
+// TODO(shtylman)
+process.cwd = function () { return '/' };
+process.chdir = function (dir) {
+    throw new Error('process.chdir is not supported');
+};
+
+},{}],49:[function(require,module,exports){
+(function(process){var matcherFiles = [
+  'toBe.js',
+  'toContain.js',
+  'toHave.js',
+  'toStartEndWith.js',
+  'toThrow.js'
+];
+
+var i, l;
+
+if (typeof process !== 'undefined' && typeof process.nextTick !== 'undefined') {
+  // node.js
+  for(i=0, l=matcherFiles.length; i<l; i++) {
+    require('./' + matcherFiles[i]);
+  }
+} else {
+  // fallback
+  console.warn('[jasmine-matchers] Since v0.2.0 please import each matcher-file separately: ' + matcherFiles.join(', '));
+}
+
+})(require("__browserify_process"))
+},{"__browserify_process":53}],54:[function(require,module,exports){
 (function() {
   var Config, Headline;
 
@@ -2724,7 +2820,7 @@ module.exports = exports = defaultHtmlMatchers;
 }).call(this);
 
 
-},{"../../src/config":8,"../../src/block/headline":13,"jasmine-matchers":48}],53:[function(require,module,exports){
+},{"../../src/block/headline":16,"../../src/config":8,"jasmine-matchers":49}],55:[function(require,module,exports){
 (function() {
   var Lines, txt1, txt2;
 
@@ -2817,7 +2913,7 @@ module.exports = exports = defaultHtmlMatchers;
 }).call(this);
 
 
-},{"../../src/block/lines":41,"jasmine-matchers":48}],54:[function(require,module,exports){
+},{"../../src/block/lines":11,"jasmine-matchers":49}],56:[function(require,module,exports){
 (function() {
   var Block, Lines, Org, Section;
 
@@ -2871,7 +2967,78 @@ module.exports = exports = defaultHtmlMatchers;
 }).call(this);
 
 
-},{"../../src/core":9,"../../src/block":5,"../../src/block/section":30,"../../src/block/lines":41,"jasmine-matchers":48}],55:[function(require,module,exports){
+},{"../../src/core":12,"../../src/block/section":10,"../../src/block/lines":11,"../../src/block":5,"jasmine-matchers":49}],57:[function(require,module,exports){
+(function() {
+  var Inline, Link;
+
+  require('jasmine-matchers');
+
+  Inline = require('../../src/inline');
+
+  Link = require('../../src/inline/link');
+
+  describe('Link', function() {
+    return describe('Link.replace', function() {
+      var parent, tokens;
+
+      parent = 0;
+      tokens = 0;
+      beforeEach(function() {
+        parent = new Inline();
+        return tokens = {};
+      });
+      it('should treat correctly a bare link starting the text', function() {
+        var txt, txtInit;
+
+        txtInit = "http://hegemonikon.org#test starting the text.";
+        txt = Link.replace(txtInit, parent, 'TKN', tokens);
+        return expect(txt).toMatch(/TKN:[^;]+?; starting the text./);
+      });
+      it('should treat correctly a simple link starting the text', function() {
+        var txt, txtInit;
+
+        txtInit = "[[http://hegemonikon.org#test]] starting the text.";
+        txt = Link.replace(txtInit, parent, 'TKN', tokens);
+        return expect(txt).toMatch(/TKN:[^;]+?; starting the text./);
+      });
+      it('should treat correctly a full link starting the text', function() {
+        var txt, txtInit;
+
+        txtInit = "[[http://hegemonikon.org#test][The *hegemonikon* website]] starting the text.";
+        txt = Link.replace(txtInit, parent, 'TKN', tokens);
+        return expect(txt).toMatch(/TKN:[^;]+?; starting the text./);
+      });
+      return it('should treat correctly two links in the same text', function() {
+        var txt, txtInit;
+
+        txtInit = "[[http://hegemonikon.org]] should be the same as http://hegemonikon.org/";
+        txt = Link.replace(txtInit, parent, 'TKN', tokens);
+        return expect(txt).toMatch(/TKN:[^;]+?; should be the same as TKN:[^;]+?;/);
+      });
+    });
+  });
+
+}).call(this);
+
+
+},{"../../src/inline/link":34,"../../src/inline":15,"jasmine-matchers":49}],58:[function(require,module,exports){
+(function() {
+  var RenderEngine;
+
+  require('jasmine-matchers');
+
+  RenderEngine = require('../../src/render/engine');
+
+  describe('RenderEngine', function() {
+    return it('should be defined', function() {
+      return expect(RenderEngine).not.toBeUndefined;
+    });
+  });
+
+}).call(this);
+
+
+},{"../../src/render/engine":14,"jasmine-matchers":49}],59:[function(require,module,exports){
 (function() {
   var Emphasis, Inline;
 
@@ -2946,94 +3113,7 @@ module.exports = exports = defaultHtmlMatchers;
 }).call(this);
 
 
-},{"../../src/inline":12,"../../src/inline/emphasis":39,"jasmine-matchers":48}],56:[function(require,module,exports){
-(function() {
-  var Entity, Inline;
-
-  require('jasmine-matchers');
-
-  Inline = require('../../src/inline');
-
-  Entity = require('../../src/inline/entity');
-
-  describe('Entity', function() {
-    return describe('Entity.replace', function() {
-      var parent, tokens;
-
-      parent = 0;
-      tokens = 0;
-      beforeEach(function() {
-        parent = new Inline();
-        return tokens = {};
-      });
-      return it('should treat correctly an entity in the text', function() {
-        var txt, txtInit;
-
-        txtInit = "Starting \\alpha; the text.";
-        txt = Entity.replace(txtInit, parent, 'TKN', tokens);
-        return expect(txt).toMatch(/Starting TKN:[^;]+?;; the text./);
-      });
-    });
-  });
-
-}).call(this);
-
-
-},{"../../src/inline":12,"../../src/inline/entity":37,"jasmine-matchers":48}],57:[function(require,module,exports){
-(function() {
-  var Inline, Link;
-
-  require('jasmine-matchers');
-
-  Inline = require('../../src/inline');
-
-  Link = require('../../src/inline/link');
-
-  describe('Link', function() {
-    return describe('Link.replace', function() {
-      var parent, tokens;
-
-      parent = 0;
-      tokens = 0;
-      beforeEach(function() {
-        parent = new Inline();
-        return tokens = {};
-      });
-      it('should treat correctly a bare link starting the text', function() {
-        var txt, txtInit;
-
-        txtInit = "http://hegemonikon.org#test starting the text.";
-        txt = Link.replace(txtInit, parent, 'TKN', tokens);
-        return expect(txt).toMatch(/TKN:[^;]+?; starting the text./);
-      });
-      it('should treat correctly a simple link starting the text', function() {
-        var txt, txtInit;
-
-        txtInit = "[[http://hegemonikon.org#test]] starting the text.";
-        txt = Link.replace(txtInit, parent, 'TKN', tokens);
-        return expect(txt).toMatch(/TKN:[^;]+?; starting the text./);
-      });
-      it('should treat correctly a full link starting the text', function() {
-        var txt, txtInit;
-
-        txtInit = "[[http://hegemonikon.org#test][The *hegemonikon* website]] starting the text.";
-        txt = Link.replace(txtInit, parent, 'TKN', tokens);
-        return expect(txt).toMatch(/TKN:[^;]+?; starting the text./);
-      });
-      return it('should treat correctly two links in the same text', function() {
-        var txt, txtInit;
-
-        txtInit = "[[http://hegemonikon.org]] should be the same as http://hegemonikon.org/";
-        txt = Link.replace(txtInit, parent, 'TKN', tokens);
-        return expect(txt).toMatch(/TKN:[^;]+?; should be the same as TKN:[^;]+?;/);
-      });
-    });
-  });
-
-}).call(this);
-
-
-},{"../../src/inline":12,"../../src/inline/link":34,"jasmine-matchers":48}],58:[function(require,module,exports){
+},{"../../src/inline":15,"../../src/inline/emphasis":38,"jasmine-matchers":49}],60:[function(require,module,exports){
 (function() {
   var Inline, Regular;
 
@@ -3084,94 +3164,40 @@ module.exports = exports = defaultHtmlMatchers;
 }).call(this);
 
 
-},{"../../src/inline":12,"../../src/inline/regular":40,"jasmine-matchers":48}],59:[function(require,module,exports){
+},{"../../src/inline":15,"../../src/inline/regular":40,"jasmine-matchers":49}],61:[function(require,module,exports){
 (function() {
-  var RenderEngine;
+  var Entity, Inline;
 
   require('jasmine-matchers');
 
-  RenderEngine = require('../../src/render/engine');
+  Inline = require('../../src/inline');
 
-  describe('RenderEngine', function() {
-    return it('should be defined', function() {
-      return expect(RenderEngine).not.toBeUndefined;
+  Entity = require('../../src/inline/entity');
+
+  describe('Entity', function() {
+    return describe('Entity.replace', function() {
+      var parent, tokens;
+
+      parent = 0;
+      tokens = 0;
+      beforeEach(function() {
+        parent = new Inline();
+        return tokens = {};
+      });
+      return it('should treat correctly an entity in the text', function() {
+        var txt, txtInit;
+
+        txtInit = "Starting \\alpha; the text.";
+        txt = Entity.replace(txtInit, parent, 'TKN', tokens);
+        return expect(txt).toMatch(/Starting TKN:[^;]+?;; the text./);
+      });
     });
   });
 
 }).call(this);
 
 
-},{"../../src/render/engine":10,"jasmine-matchers":48}],60:[function(require,module,exports){
-// shim for using process in browser
-
-var process = module.exports = {};
-
-process.nextTick = (function () {
-    var canSetImmediate = typeof window !== 'undefined'
-    && window.setImmediate;
-    var canPost = typeof window !== 'undefined'
-    && window.postMessage && window.addEventListener
-    ;
-
-    if (canSetImmediate) {
-        return function (f) { return window.setImmediate(f) };
-    }
-
-    if (canPost) {
-        var queue = [];
-        window.addEventListener('message', function (ev) {
-            if (ev.source === window && ev.data === 'process-tick') {
-                ev.stopPropagation();
-                if (queue.length > 0) {
-                    var fn = queue.shift();
-                    fn();
-                }
-            }
-        }, true);
-
-        return function nextTick(fn) {
-            queue.push(fn);
-            window.postMessage('process-tick', '*');
-        };
-    }
-
-    return function nextTick(fn) {
-        setTimeout(fn, 0);
-    };
-})();
-
-process.title = 'browser';
-process.browser = true;
-process.env = {};
-process.argv = [];
-
-process.binding = function (name) {
-    throw new Error('process.binding is not supported');
-}
-
-// TODO(shtylman)
-process.cwd = function () { return '/' };
-process.chdir = function (dir) {
-    throw new Error('process.chdir is not supported');
-};
-
-},{}],48:[function(require,module,exports){
-(function(process){var i, l;
-
-if (typeof process !== 'undefined' && typeof process.nextTick !== 'undefined') {
-  // node.js
-  require('./toBe.js');
-  require('./toContain.js');
-  require('./toHave.js');
-  require('./toStartEndWith.js');
-  require('./toThrow.js');
-} else {
-  // fallback
-  console.warn('[jasmine-matchers] Since v0.2.0 please import each matcher-file separately: ' + matcherFiles.join(', '));
-}
-
-})(require("__browserify_process"))
-},{"./toBe.js":61,"./toContain.js":62,"./toHave.js":63,"./toStartEndWith.js":64,"./toThrow.js":65,"__browserify_process":60}],66:[function(require,module,exports){
+},{"../../src/inline":15,"../../src/inline/entity":36,"jasmine-matchers":49}],62:[function(require,module,exports){
 (function() {
   var Comment, Document;
 
@@ -3200,317 +3226,5 @@ if (typeof process !== 'undefined' && typeof process.nextTick !== 'undefined') {
 }).call(this);
 
 
-},{"../../../src/document":14,"../../../src/block/beginend/comment":20,"jasmine-matchers":48}],61:[function(require,module,exports){
-beforeEach(function() {
-  this.addMatchers({
-
-    toBeArray: function() {
-      return {}.toString.call(this.actual) === '[object Array]';
-    },
-
-    toBeCloseToOneOf: function(values, isCloseToFunction) {
-      var actual = this.actual;
-      var isCloseTo = values.some(function(oneValue) {
-        return isCloseToFunction(actual, oneValue)
-      });
-
-      var not = this.isNot ? " NOT" : "";
-      var isCloseString = stringifyFunctionName(isCloseToFunction);
-      this.message = function() {
-        return 'Expected ' + actual + not + ' to be `' + isCloseString + '` of one of ' + JSON.stringify(values) + '.';
-      };
-      return isCloseTo;
-    },
-
-    toBeInstanceOf: function(Constructor) {
-      return this.actual instanceof Constructor;
-    },
-
-    toBeInRange: function(a, b) {
-      return this.actual <= b && this.actual >= a;
-    },
-
-    toBeNan: function() { // needs to be spelled 'Nan' due to jasmine conventions
-      var actual = this.actual;
-      // NaN is the only value that is not strictly equal to itself
-      return actual !== actual;
-    },
-
-    toBeNumber: function() {
-      return typeof this.actual == 'number';
-    },
-
-    toBeOfType: function(type) {
-      return typeof this.actual === type;
-    },
-
-    toBeOneOf: function(values) {
-      return values.indexOf(this.actual) > -1;
-    }
-
-  });
-
-  function stringifyFunctionName(func) {
-    var name = func.name;
-    if (!name) {
-      name = func.toSource()
-        .replace(/^function\s/, '') // remove leading 'function '
-        .match(/^.[^(]]+/)[0]; // remove everything after the function name.
-    }
-    return fromCamelCaseToReadable(name);
-  }
-
-  function fromCamelCaseToReadable(camelCaseString) {
-    var characters = camelCaseString.split('');
-    return characters.map(addSpaceBeforeUpperCaseLetter).join('').toLowerCase();
-  }
-
-  function addSpaceBeforeUpperCaseLetter(character){
-    if (character.toLowerCase() != character) {
-      character = ' ' + character;
-    }
-    return character;
-  }
-
-
-});
-
-},{}],62:[function(require,module,exports){
-beforeEach(function() {
-  this.addMatchers({
-
-    toContainOnce: function(value) {
-      var actual = this.actual;
-      var containsOnce = false;
-      if (actual) {
-        var firstFoundAt = actual.indexOf(value);
-        containsOnce = firstFoundAt!=-1 && firstFoundAt == actual.lastIndexOf(value);
-      }
-      return containsOnce;
-    }
-
-  });
-});
-
-},{}],63:[function(require,module,exports){
-(function() {
-  function testKeyList(keys, object, testFn) {
-    for (var i = 0, len = keys.length; i < len; i += 1) {
-      if (!testFn(object, keys[i])) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  function testKeyObject(referenceObject, object, testFn) {
-    for (var key in referenceObject) {
-      if (!testFn(object, key, referenceObject[key])) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  function hasProperty(object, key) {
-    return key in object;
-  }
-  function hasOwnProperty(object, key) {
-    return {}.hasOwnProperty.call(object, key);
-  }
-  function hasPropertyWithValue(object, key, value) {
-    return object[key] === value;
-  }
-  function hasOwnPropertyWithValue(object, key, value) {
-    return hasOwnProperty(object, key) && hasPropertyWithValue(object, key, value);
-  }
-
-  beforeEach(function() {
-    this.addMatchers({
-
-      toHaveBeenCalledXTimes: function(count) {
-        var callCount = this.actual.callCount;
-        var not = this.isNot ? "NOT " : "";
-        this.message = function() {
-          return 'Expected spy "' + this.actual.identity + '" ' + not + ' to have been called ' + count + ' times, but was ' + callCount + '.';
-        };
-        return callCount == count;
-      },
-
-      toHaveLength: function(length) {
-        return this.actual.length === length;
-      },
-
-      toHaveOwnProperties: function(name0, name1, name2) {
-        return testKeyList(arguments, this.actual, hasOwnProperty);
-      },
-
-      toHaveOwnPropertiesWithValues: function(obj) {
-        return testKeyObject(obj, this.actual, hasOwnPropertyWithValue);
-      },
-
-      toHaveProperties: function(name0, name1, name2) {
-        return testKeyList(arguments, this.actual, hasProperty);
-      },
-
-      toHavePropertiesWithValues: function(obj) {
-        return testKeyObject(obj, this.actual, hasPropertyWithValue);
-      },
-
-      toExactlyHaveProperties: function(name0, name1, name2) {
-        var actual = this.actual;
-        var numArguments = arguments.length;
-        for (var i = 0; i < numArguments; i += 1) {
-          if (!hasOwnProperty(actual, arguments[i])) { return false; }
-        }
-        return Object.keys(actual).length === numArguments;
-      }
-
-    });
-  });
-}());
-
-},{}],64:[function(require,module,exports){
-beforeEach(function() {
-  this.addMatchers({
-
-    //
-    // start/endWith
-    //
-
-    toEndWith: function(value) {
-      return endsWith(this.actual, value);
-    },
-
-    toEachEndWith: function(searchString) {
-      var arrayOfStrings = this.actual;
-      return arrayOfStrings.every(function(oneValue) {
-        return endsWith(oneValue, searchString)
-      });
-    },
-
-    toStartWithEither: function() {
-      var args = [].slice.call(arguments);
-      for (var i=0, l=args.length; i<l; i++) {
-        if (startsWith(this.actual, args[i])) {
-          return true;
-        }
-      }
-      return false;
-    },
-
-    toSomeEndWith: function(searchString) {
-      var arrayOfStrings = this.actual;
-      return arrayOfStrings.some(function(oneValue) {
-        return endsWith(oneValue, searchString)
-      });
-    },
-
-    toStartWith: function(value) {
-      return startsWith(this.actual, value);
-    },
-
-    toEachStartWith: function(searchString) {
-      var arrayOfStrings = this.actual;
-      return arrayOfStrings.every(function(oneValue) {
-        return startsWith(oneValue, searchString)
-      });
-    },
-
-    toSomeStartWith: function(searchString) {
-      var arrayOfStrings = this.actual;
-      return arrayOfStrings.some(function(oneValue) {
-        return startsWith(oneValue, searchString)
-      });
-    }
-
-  });
-
-  function isArray(value) {
-    return toString.call(value) == '[object Array]';
-  }
-
-  function endsWith(haystack, needle) {
-    if (isArray(haystack)) {
-      return arrayEndsWith(haystack, needle);
-    } else {
-      return stringEndsWith(haystack, needle);
-    }
-  }
-
-  function startsWith(haystack, needle) {
-    if (isArray(haystack)) {
-      return arrayStartsWith(haystack, needle);
-    } else {
-      return stringStartsWith(haystack, needle);
-    }
-  }
-
-  function stringEndsWith(haystack, needle) {
-    return haystack.substr(-needle.length) == needle;
-  }
-
-  function stringStartsWith(haystack, needle) {
-    return haystack.substr(0, needle.length) == needle;
-  }
-
-  function arrayEndsWith(haystack, needle) {
-    if (isArray(needle)) {
-      var offset = haystack.length - needle.length;
-      return needle.every(function(val, idx) {
-        return val == haystack[idx + offset];
-      });
-    }
-    return haystack.indexOf(needle) == haystack.length-1;
-  }
-
-  function arrayStartsWith(haystack, needle) {
-    if (isArray(needle)) {
-      return needle.every(function(val, idx) {
-        return val == haystack[idx];
-      });
-    }
-    return haystack.indexOf(needle) == 0;
-  }
-
-});
-
-},{}],65:[function(require,module,exports){
-beforeEach(function() {
-  this.addMatchers({
-
-    toThrowInstanceOf: function(klass) {
-      try {
-        this.actual();
-      } catch (e) {
-        return e instanceof klass;
-      }
-      return false;
-    },
-
-    toThrowStartsWith: function(text) {
-      var doesStartWith = false;
-      var errorMessage = '';
-      try {
-        this.actual();
-      } catch (e) {
-        errorMessage = e.message;
-        doesStartWith = startsWith(errorMessage, text);
-      }
-      var not = this.isNot ? " NOT" : "";
-      this.message = function() {
-        return 'Expected thrown error message `' + errorMessage + '`' + not + ' to start with `' + text + '`.';
-      };
-      return doesStartWith;
-    }
-
-  });
-
-  function startsWith(haystack, needle) {
-    return haystack.substr(0, needle.length) == needle;
-  }
-
-});
-
-},{}]},{},[5,44,19,20,1,17,18,22,21,43,13,41,45,46,23,24,27,28,25,26,33,2,3,31,30,32,29,16,15,8,9,14,12,39,37,36,35,34,40,38,11,10,4,7,6,47,66,52,53,54,49,42,55,56,57,58,59,50,51])
+},{"../../../src/document":9,"../../../src/block/beginend/comment":22,"jasmine-matchers":49}]},{},[5,45,22,21,19,20,24,1,44,16,46,11,47,25,41,28,29,27,26,33,2,3,31,10,32,30,23,18,17,9,8,38,36,35,42,39,12,34,40,13,37,6,7,48,62,54,4,55,50,56,43,59,57,61,58,60,51,52,15,14])
 ;
