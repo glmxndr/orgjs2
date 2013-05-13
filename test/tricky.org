@@ -20,11 +20,16 @@ Some header content. Some /emphasis/, some *bold text*, some _underlined
  text_, some ~verbatim text~, some =code text=, some +striken-
 through text+. 
 
+  #+CAPTION: Higgs Boson discovery
+  [[./img/hb.jpg]]
+
 Some tricky stuff... /+/ oh and /+/.
 
   #+BEGIN_CENTER
   Centered text?
   #+END_CENTER
+
+    [[./img/hb.jpg]]
 
   #+BEGIN_EXAMPLE
   metaDeclaration: /\s*#\+[A-Z0-9_]+:$/
@@ -142,7 +147,8 @@ broken here
    And *text continuing after*.
 
 ** DONE [#A] Bloated heading! What if the title were quite long?  :some:tags:CaMel:CAPITAL:012:
-   SCHEDULED: <2011-02-18 Fri> DEADLINE: <2011-04-26 Tue>
+   SCHEDULED: <2011-02-18 Fri> 
+   DEADLINE: <2011-04-26 Tue>
    :CLOCK:
    CLOCK: [2011-03-09 Wed 21:25]
    CLOCK: [2011-03-09 Wed 20:41]--[2011-03-09 Wed 20:41] =>  0:00

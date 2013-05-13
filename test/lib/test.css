@@ -211,14 +211,33 @@ article figure blockquote:before {
   vertical-align:-.2em;
 }
 
+article {
+  counter-reset: fignum;
+}
+
 article figcaption {
   font-style: italic;
   margin-left: 3em;
   background:#f9f9f9;
 }
+
 article figcaption:before {
   content: "— ";
 }
+
+article figure.illust {
+  margin:0;
+  text-align: center;
+}
+article figure.illust figcaption{
+  margin:0;
+  text-align: center;
+}
+article figure.illust figcaption:before {
+  counter-increment: fignum;
+  content:"Fig. " counter(fignum) " : ";
+}
+
 article figcaption em {
   font-style: normal;
 }
