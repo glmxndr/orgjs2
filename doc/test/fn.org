@@ -1,0 +1,25 @@
+
+* Test
+
+  Some paragraph[fn:1].
+
+  + [ ] Some item[fn:1].
+  + [X] Some item[fn:1].
+  + [-] Some item[fn:1].
+  -----
+  + Test :: a test
+  -----
+  1) [@2] Test a test again
+  -----
+  + [@2] [X] some value
+  -----
+  * [@5] [ ] Test :: a test again again
+
+    [fn:1]Some content of the footnote.
+    Para continued here.
+    #+begin_example
+    someexample
+    #+end_example
+  New para after the footnote.
+
+  

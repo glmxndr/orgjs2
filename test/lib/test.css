@@ -1,0 +1,224 @@
+@charset "UTF-8";
+@import url("http://fonts.googleapis.com/css?family=Ubuntu:300,400,700,300italic,400italic,700italic&subset=latin,greek");
+@import url("http://fonts.googleapis.com/css?family=Ubuntu+Mono");
+/* ================ IMPORTS ================ */
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed,
+figure, figcaption, footer, header, hgroup,
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  vertical-align: baseline;
+}
+
+html {
+  line-height: 1;
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+caption, th, td {
+  text-align: left;
+  font-weight: normal;
+  vertical-align: middle;
+}
+
+q, blockquote {
+  quotes: none;
+}
+q:before, q:after, blockquote:before, blockquote:after {
+  content: "";
+  content: none;
+}
+
+a img {
+  border: none;
+}
+
+article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section, summary {
+  display: block;
+}
+
+* html {
+  font-size: 100%;
+}
+
+html {
+  font-size: 16px;
+  line-height: 1.5em;
+}
+
+dl {
+ width:100%;
+ overflow:hidden;
+}
+dt {
+ float:left;
+ width:30%; /* adjust the width; make sure the total of both is 100% */
+}
+dd {
+ float:left;
+ width:70%; /* adjust the width; make sure the total of both is 100% */
+}
+
+/* ================ MAIN VARIABLES ================ */
+/* ================ MIXINS ================ */
+/* ================ SCREEN ================ */
+body {
+  font-family: 'Ubuntu', sans-serif;
+  margin: 0 auto;
+}
+
+tt, code {
+  font-family: "Ubuntu Mono";
+  white-space: pre;
+}
+
+em {
+  font-style: italic;
+}
+
+strong: {
+  font-weight: bold;
+}
+
+pre {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  white-space: pre;
+}
+
+div.main {
+  margin: 3em;
+}
+
+sup.fndef + * {
+  display: inline-block;
+}
+
+article > * {
+  max-width: 40em;
+  text-align: justify;
+}
+article p + p {
+  text-indent: 2em;
+}
+article h1 {
+  font-size: 40px;
+  line-height: 60px;
+  text-transform: small-caps;
+  font-family: Ubuntu;
+  clear: both;
+  margin-top: 15px;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+article h2 {
+  font-size: 32px;
+  line-height: 40px;
+  text-transform: small-caps;
+  font-family: Ubuntu;
+  clear: both;
+  text-align: left;
+  margin-top: 15px;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+article h3 {
+  font-size: 32px;
+  line-height: 40px;
+  text-transform: small-caps;
+  font-family: Ubuntu;
+  clear: both;
+  text-align: left;
+  margin-top: 15px;
+  margin-bottom: 5px;
+  font-weight: normal;
+}
+article h4 {
+  font-size: 32px;
+  line-height: 40px;
+  text-transform: small-caps;
+  font-family: Ubuntu;
+  clear: both;
+  text-align: left;
+  margin-top: 15px;
+  margin-bottom: 5px;
+  font-weight: lighter;
+  font-style: italic;
+}
+article h5 {
+  font-size: 24px;
+  line-height: 40px;
+  text-transform: small-caps;
+  font-family: Ubuntu;
+  clear: both;
+  text-align: left;
+  font-weight: normal;
+}
+article h6 {
+  font-size: 24px;
+  line-height: 40px;
+  text-transform: small-caps;
+  font-family: Ubuntu;
+  clear: both;
+  text-align: left;
+  font-weight: lighter;
+  font-style: italic;
+}
+article ul {
+  list-style-type: circle;
+  margin-left: 2em;
+}
+article ol {
+  margin-left: 2em;
+}
+article figure {
+  margin-left: 3em;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  background:#f9f9f9;
+}
+article figure blockquote, article figure pre {
+  font-family: Ubuntu;
+  font-style: italic;
+  margin:1.5em 10px;
+  padding:.5em 10px;
+}
+article figure blockquote em, article figure pre em {
+  font-style: normal;
+}
+
+article figure blockquote:before {
+  color:#ccc;
+  content:'«';
+  font-size:4em;
+  line-height:.1em;
+  margin-right:.25em;
+  vertical-align:-.2em;
+}
+
+article figcaption {
+  font-style: italic;
+  margin-left: 3em;
+  background:#f9f9f9;
+}
+article figcaption:before {
+  content: "— ";
+}
+article figcaption em {
+  font-style: normal;
+}

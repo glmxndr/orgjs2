@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>OrgJS test page</title>
+  <link rel="stylesheet" type="text/css" href="lib/test.css" />
+  <script type="text/javascript" src="lib/lodash.js"></script>
+  <script type="text/javascript" src="lib/jsonpath.js"></script>
+  <script type="text/javascript" src="../dist/orgjs.js"></script>
+</head>
+<body>
+  <div class="main"></div>
+  <script type="text/javascript">
+    var org = new Org();
+    var renderer = org.render.defaults.html;
+    var doc = org.parseDocumentAt('./tricky.org');
+    var html = renderer.render(doc);
+
+    var dest = document.querySelector('.main');
+    dest.innerHTML = html;
+  </script>
+</body>
+</html>

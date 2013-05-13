@@ -1,0 +1,88 @@
+#+TITLE:     =OrgJS= test page
+#+AUTHOR:    subtenante
+#+EMAIL:     subtenante@n75s
+#+DATE:      2013-05-10 Fri
+#+DESCRIPTION: 
+#+KEYWORDS: 
+#+LANGUAGE:  en
+#+OPTIONS:   H:3 num:t toc:t \n:nil @:t ::t |:t ^:t -:t f:t *:t <:t
+#+OPTIONS:   TeX:t LaTeX:nil skip:nil d:nil todo:t pri:nil tags:not-in-toc
+#+INFOJS_OPT: view:nil toc:nil ltoc:t mouse:underline buttons:0 path:http://orgmode.org/org-info.js
+#+EXPORT_SELECT_TAGS: export
+#+EXPORT_EXCLUDE_TAGS: noexport
+#+LINK_UP:   
+#+LINK_HOME: 
+
+This is the test page for Org mode parser orgjs.
+
+* Footnotes
+  This section should contain footnotes[fn::Even inline ones.].
+
+  This line contains a simple reference to the first footnote[fn:1].
+
+  [fn:1] The footnote content
+  can be on several lines.
+
+*** TODO Put the test document in its own file
+
+* Lists
+** Unordered
+   + [ ] This 
+   + [X] is
+   + [-] a
+   + list
+** Ordered
+   #+START: 5
+   #+TYPE: I
+   1. Ordered
+   2. list
+   3. starting at 5
+   -----
+   #+TYPE: a
+   1. [@4] [ ] Ordered
+   2. [X] list
+   3. [-] starting at 4
+   
+* Headlines
+** Simple headline
+** TODO [#A] /Complete/ headline                                  :tag1:tag2:
+* Markup
+  This section deals with the markup system.
+  
+  Orgjs differs from org-mode in that emphasis /can *be nested at*
+  several levels/.
+
+** Links
+*** Bare links
+    Some links in the markup can be interpreted as links if they start
+    by a protocol definition: http:// is treated like a link.
+*** Simple links
+    Things surrounded by 2 =[= characters are treated as links as well.
+    + =[[http://]]= is a link [[http://]]
+*** Described links
+    + 
+
+** Verbatim
+   You can have ~verbatim text~ and =code text= as well.
+   
+   Verbatim text can ~contain anything[fn:1]~, it won't be interpreted, like
+   a ~link http://hegemonikon.com, see?~. Or other markup like 
+** Emphasis
+   + regular :: This is regular text.
+   + emph :: This is /emphasized text/. 
+   + strong :: This is *strong text*.
+   + underline :: This is _underlined text_.
+   + strike :: This is +striken-through text+.
+
+** Embedding LaTeX
+   We can have maths 
+   + simple: $a+b^2=5$ like this, 
+   + complex: $$ a-5x+14y=\alpha $$ like that, 
+   + and even worse\( e^{i\pi}-1 = 0 \)like that.
+
+** Misc
+   This is markup for special things.
+*** Horizontal line
+    This line is above an horizontal line.
+    -----
+    This line is under an horizontal line.

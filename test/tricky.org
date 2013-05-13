@@ -1,0 +1,194 @@
+#+AUTHOR:    Me Myself
+#+TITLE:     Title of the document
+#+EMAIL:     gandrieu@F647J3J
+#+DATE:      2011-03-08 mar.
+#+DESCRIPTION:
+#+KEYWORDS:
+#+LANGUAGE:  en
+#+OPTIONS:   H:3 num:t toc:t \n:nil @:t ::t |:t ^:t -:t f:t *:t <:t
+#+OPTIONS:   TeX:t LaTeX:nil skip:nil d:nil todo:t pri:nil tags:not-in-toc
+#+INFOJS_OPT: view:nil toc:nil ltoc:t mouse:underline buttons:0 path:http://orgmode.org/org-info.js
+#+EXPORT_SELECT_TAGS: export
+#+EXPORT_EXCLUDE_TAGS: noexport
+
+Some header content. Some /emphasis/, some *bold text*, some _underlined
+ text_, some ~verbatim text~, some =code text=, some +striken-
+through text+. 
+
+Some tricky stuff... /+/ oh and /+/.
+
+  #+BEGIN_CENTER
+  Centered text?
+  #+END_CENTER
+
+  #+BEGIN_EXAMPLE
+  metaDeclaration: /\s*#\+[A-Z0-9_]+:$/
+  & < > ' "
+  deadline: /DEADLINE: <(\d{4}-\d\d-\d\d) [A-Za-z]{3}>$/
+  #+END_EXAMPLE
+
+#+BEGIN_SRC js
+  var test = 1;
+  window.incr = function (n) { return 1 + n; };
+#+END_SRC
+
+* Head again
+
+** Some headline
+
+  Just a simple paragraph with some content
+
+  This is an equation: =x + 1 > y²=
+
+  #+BEGIN_QUOTE
+ which changes
+   indentation
+without notice!
+  #+END_QUOTE
+
+  + Here starts a list with an item
+    continuing here
+  but 
+broken here
+  + Another item
+
+    With a second paragraph
+
+    - A sublist starts here, with subnumbers
+      1. [@5] item 5
+      6. item 6
+         #+BEGIN_VERSE
+         Oh here is some poetry
+         That does not even /rhyme/
+           Why should we care, dear?
+         It's all over /*now*/.
+           -- Me, /Poem #7/
+         #+END_VERSE
+      10. item 7
+    - And continues
+        here
+    * Another item 
+     delimiter
+    And a third paragraph
+
+  + Third outer item
+  And closing paragraph.
+
+
+  My favorite scenes are (in this order)
+        1. The attack of the Rohirrim
+        2. Eowyn's fight with the witch king
+           + this was already my favorite scene in the book
+           + I really like Miranda Otto.
+        3. Peter Jackson being shot by Legolas
+           - on DVD only
+           He makes a really funny face when it happens.
+        But in the end, no individual scenes matter but the film as a whole.
+        Important actors in this film are:
+        - Elijah Wood :: He plays Frodo
+        - Sean Austin :: He plays Sam, Frodo's friend.  I still remember
+          him very well from his role as Mikey Walsh in The Goonies.
+
+** Some headline again
+  Here is a message:
+
+  This is a *quoted message*
+  with the caret-notation
+  and continuing
+
+  #+BEGIN_QUOTE
+  This is a quoted message with the begin,end notation.
+    -- Al Eintein & Dick Feynman, /Rambling thoughts/ @III.2.
+  #+END_QUOTE
+
+  #+BEGIN_CENTER
+  Centered text?
+  #+END_CENTER
+
+  + This is a list item starting with a plus
+    + This is another list item starting with a plus
+      and the content
+      + can be indented just anyhow
+      as long as I don't come back at
+      the same indentation level as the plus
+
+  - This is a list item starting with a minus
+
+  * This is a list item starting with a star
+
+  Here is an equation: $4 y = x^2 + x + 1$
+
+  Here is a long equation: $$y = x^2 + x + 1$$
+
+* Header                                                            :my:tags:
+** Sub section 1                                                   :some:tag:
+   #+AUTHOR: Someone Else
+
+   This is some text. \\
+   I just came back to the next line. Didn't I?
+
+   With ~some~ content.
+   + a list
+     - a sublist
+     - yes, several items
+     - in this list
+   + with several items, one of wich being on several lines /because I
+     need/ a very long item for that
+   And *text continuing after*.
+
+** DONE [#A] Bloated heading! What if the title were quite long?  :some:tags:CaMel:CAPITAL:012:
+   SCHEDULED: <2011-02-18 Fri> DEADLINE: <2011-04-26 Tue>
+   :CLOCK:
+   CLOCK: [2011-03-09 Wed 21:25]
+   CLOCK: [2011-03-09 Wed 20:41]--[2011-03-09 Wed 20:41] =>  0:00
+   CLOCK: [2011-03-09 Wed 20:41]--[2011-03-09 Wed 20:41] =>  0:00
+   :END:
+   :PROPERTIES:
+   :DATE:     2011-03-05
+   :TOTO:     tata
+   :AUTHOR:   Myself
+   :EMAIL:    me@me.me
+   :A_LONG_VALUE_WITH_UNDERSCORES: a long value with underscores, pretty long actually, may even have to go to the next line, we'll see about that won't we ?
+   :a-a:      ,
+   :END:
+
+   Some content here.
+
+   There will be many details in this section!
+
+*** Introduction
+
+    Ok, there is some text alright.
+
+    : Look : some code here !
+    : This is a sample code.
+
+    And here also.
+
+    #+BEGIN_SRC javascript -n
+      var toto = 1;                         (ref:toto)
+      var tutu = {
+        arr: [],
+        obj: ()
+      };
+    #+END_SRC
+
+    Look at the [[(toto)]] declaration.
+
+    + [ ] This may become an unchecked checkbox...
+    + [-] This may become a checked checkbox
+      - [ ] Under1
+      - [ ] Under2
+      - [X] Under3
+
+*** DONE This is finished                                         :other:tag:
+*** TODO This is not started
+
+***** TODO [#B] Missed a step!
+      CLOCK: [2011-03-09 mer. 13:04]
+      :PROPERTIES:
+      :AUTHOR: Other One
+      :END:
+
+***** Here also!
+
