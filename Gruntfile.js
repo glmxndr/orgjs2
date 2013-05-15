@@ -81,6 +81,7 @@ module.exports = function(grunt) {
   grunt.registerTask('test', ['jshint', 'coffeeify:test', 'exec:test']);
   grunt.registerTask('testStack', ['jshint', 'coffeeify:test', 'exec:testStack']);
   grunt.registerTask('default', ['jshint', 'coffeeify:test', 'jasmine-node', 'browserify', 'uglify']);
+  grunt.registerTask('ugly', ['uglify']);
   grunt.registerTask('quick', ['browserify']);
 
 };
