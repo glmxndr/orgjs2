@@ -241,3 +241,7 @@ article figure.illust figcaption:before {
 article figcaption em {
   font-style: normal;
 }
+
+nav.toc ul {
+  margin-left: 2em;
+}

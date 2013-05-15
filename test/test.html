@@ -7,14 +7,22 @@
   <script type="text/javascript" src="../dist/orgjs.js"></script>
 </head>
 <body>
+  <nav class="toc"></nav>
+  <hr/>
   <div class="main"></div>
   <script type="text/javascript">
     var org = new Org();
-    var renderer = org.render.defaults.html;
+    
     var doc = org.parseDocumentAt('./tricky.org');
-    var html = renderer.render(doc);
 
-    var dest = document.querySelector('.main');
+    var tocRenderer = org.render.defaults.htmlToc;
+    var toc = tocRenderer.render(doc);
+    var nav = document.querySelector('nav.toc');
+    nav.innerHTML = toc;
+
+    var htmlRenderer = org.render.defaults.html;
+    var html = htmlRenderer.render(doc);
+    var dest = document.querySelector('div.main');
     dest.innerHTML = html;
   </script>
 </body>
