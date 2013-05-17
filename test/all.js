@@ -212,7 +212,7 @@ global.Org = Org;
 
 module.exports = exports = Org;
 })()
-},{"./utils":4,"./render/engine":8,"./render/default/html":9,"./render/default/html-toc":10,"./block":3,"./inline":11,"./config":6,"./block/headline":12,"./document":13,"./block/properties/clockline":14,"./block/properties/deadline":15,"./block/properties/scheduled":16,"./block/illust":17,"./block/special/hr":18,"./block/special/fndef":19,"./block/beginend/example":20,"./block/beginend/quote":21,"./block/beginend/center":22,"./block/beginend/comment":23,"./block/beginend/verse":24,"./block/beginend/src":25,"./block/lists/dlist":26,"./block/lists/dlitem":27,"./block/lists/ulist":28,"./block/lists/ulitem":29,"./block/lists/olist":30,"./block/lists/olitem":31,"./block/special/drawer":32,"./block/special/colon":33,"./block/properties/propdef":34,"./block/section":35,"./block/special/commentline":36,"./block/para":37,"./inline/link":38,"./inline/latex":39,"./inline/fnref":40,"./inline/entity":41,"./inline/verbatim":42,"./inline/sub":43,"./inline/sup":44,"./inline/emphasis":45,"./inline/linebreak":46,"./inline/regular":47}],13:[function(require,module,exports){
+},{"./utils":4,"./render/engine":8,"./render/default/html":9,"./render/default/html-toc":10,"./block":3,"./inline":11,"./config":6,"./block/headline":12,"./document":13,"./block/properties/clockline":14,"./block/properties/deadline":15,"./block/properties/scheduled":16,"./block/illust":17,"./block/special/hr":18,"./block/special/fndef":19,"./block/beginend/example":20,"./block/beginend/quote":21,"./block/beginend/center":22,"./block/beginend/comment":23,"./block/beginend/verse":24,"./block/beginend/src":25,"./block/lists/dlist":26,"./block/lists/dlitem":27,"./block/lists/ulist":28,"./block/lists/ulitem":29,"./block/lists/olist":30,"./block/lists/olitem":31,"./block/special/drawer":32,"./block/special/colon":33,"./block/section":34,"./block/properties/propdef":35,"./block/special/commentline":36,"./block/para":37,"./inline/link":38,"./inline/latex":39,"./inline/fnref":40,"./inline/entity":41,"./inline/verbatim":42,"./inline/sub":43,"./inline/sup":44,"./inline/emphasis":45,"./inline/linebreak":46,"./inline/regular":47}],13:[function(require,module,exports){
 var _U      = require('./utils');
 var Block   = require('./block');
 var Content = require('./block/content');
@@ -269,7 +269,7 @@ Document.parser = function (org) {
 };
 
 module.exports = exports = Document;
-},{"./utils":4,"./block":3,"./block/content":48,"./block/section":35,"./config":6,"./block/lines":49,"./include":50,"./core":7}],50:[function(require,module,exports){
+},{"./utils":4,"./block":3,"./block/content":48,"./block/section":34,"./config":6,"./block/lines":49,"./include":50,"./core":7}],50:[function(require,module,exports){
 var _U    = require('./utils');
 var Lines = require('./block/lines');
 
@@ -985,7 +985,7 @@ Headline.parser = function (org) {
   var priorities = config.headlinePriorities;
 
   // Build the regexp
-  var str = "(\\**)%s+";
+  var str = "(\\**)%s*";
   str += "(?:(%TODOS)%s+)?";
   str += "(?:\\[\\#(%PRIORITIES)\\]%s+)?";
   str += "(.*?)%s*";
@@ -1206,7 +1206,7 @@ var Para = Block.define({
 });
 
 module.exports = exports = Para;
-},{"../utils":4,"../block":3,"./lines":49}],35:[function(require,module,exports){
+},{"../utils":4,"../block":3,"./lines":49}],34:[function(require,module,exports){
 var _U = require('../utils');
 var _  = _U._;
 
@@ -1254,7 +1254,57 @@ _U.extendProto(Section, Block, {
 });
 
 module.exports = exports = Section;
-},{"../utils":4,"../block":3,"./content":48}],41:[function(require,module,exports){
+},{"../utils":4,"../block":3,"./content":48}],45:[function(require,module,exports){
+var _U = require('../utils');
+var Inline = require('../inline');
+
+var emphRgxp = /(^|[\s\S]*[^\\])(([\/*+_])([^\s][\s\S]*?[^\s\\]|[^\s\\])\3)/g;
+
+var Emphasis = Inline.define({
+  type: 'emphasis',
+  replace: function (txt, parent, tp, tokens) {
+    var matcher;
+    var replaceFn = function () {
+      var a     = arguments;
+      var pre   = a[1];
+      var raw   = a[2];
+      var type  = a[3] || "";
+      var inner = a[4] || "";
+      var token = "";
+      if (raw) {
+        var EmphConstr = Emphasis.types[type];
+        var emph       = new EmphConstr(parent);
+        emph.raw       = raw;
+        emph.append(emph.parseInline(inner, tp, tokens));
+        token          = _U.newToken(tp);
+        tokens[token]  = emph;
+      }
+      return pre + token;
+    };
+    do {
+      txt = txt.replace(emphRgxp, replaceFn);
+      matcher = emphRgxp.exec(txt);
+    } while (matcher);
+    return txt;
+  }
+});
+
+var define = function (type) {
+  return Inline.define({
+    'parent': Emphasis, 
+    'type'  : type
+  });
+};
+
+Emphasis.types = {
+  '/': Emphasis,
+  '*': define('strong'),
+  '_': define('underline'),
+  '+': define('strike')
+};
+
+module.exports = exports = Emphasis;
+},{"../utils":4,"../inline":11}],41:[function(require,module,exports){
 var _U     = require('../utils');
 var Inline = require('../inline');
 
@@ -1671,56 +1721,6 @@ define("Diamond","\\diamond","&diamond;","[diamond]","[diamond]","⋄");
 define("loz","\\diamond","&loz;","[lozenge]","[lozenge]","◊");
 
 module.exports = exports = Entity;
-},{"../utils":4,"../inline":11}],45:[function(require,module,exports){
-var _U = require('../utils');
-var Inline = require('../inline');
-
-var emphRgxp = /(^|[\s\S]*[^\\])(([\/*+_])([^\s][\s\S]*?[^\s\\]|[^\s\\])\3)/g;
-
-var Emphasis = Inline.define({
-  type: 'emphasis',
-  replace: function (txt, parent, tp, tokens) {
-    var matcher;
-    var replaceFn = function () {
-      var a     = arguments;
-      var pre   = a[1];
-      var raw   = a[2];
-      var type  = a[3] || "";
-      var inner = a[4] || "";
-      var token = "";
-      if (raw) {
-        var EmphConstr = Emphasis.types[type];
-        var emph       = new EmphConstr(parent);
-        emph.raw       = raw;
-        emph.append(emph.parseInline(inner, tp, tokens));
-        token          = _U.newToken(tp);
-        tokens[token]  = emph;
-      }
-      return pre + token;
-    };
-    do {
-      txt = txt.replace(emphRgxp, replaceFn);
-      matcher = emphRgxp.exec(txt);
-    } while (matcher);
-    return txt;
-  }
-});
-
-var define = function (type) {
-  return Inline.define({
-    'parent': Emphasis, 
-    'type'  : type
-  });
-};
-
-Emphasis.types = {
-  '/': Emphasis,
-  '*': define('strong'),
-  '_': define('underline'),
-  '+': define('strike')
-};
-
-module.exports = exports = Emphasis;
 },{"../utils":4,"../inline":11}],40:[function(require,module,exports){
 var _U     = require('../utils');
 var Inline = require('../inline');
@@ -1827,7 +1827,7 @@ var _U     = require('../utils');
 var _      = _U._;
 var Inline = require('../inline');
 
-var linkDescRgxp   = /\[\[(\S*?[^\s\\])\](?:\[([\s\S]*[^\\])\])?\]/g;
+var linkDescRgxp   = /\[\[([^\]]*?[^\s\\])\](?:\[([^\]]*[^\\])\])?\]/g;
 var linkBareRgxp   = /((?:http|https|ftp|mailto|file|news|shell|elisp|doi|message):(?:[\w\.\/\?\*\+#@!$&'_~:,;=-]|%[\dA-F]{2})+)/ig;
 
 var Link = Inline.define({
@@ -2235,7 +2235,7 @@ var Dlist = List.define({
 });
 
 module.exports = exports = Dlist;
-},{"../../utils":4,"../../block":3,"./_list":54,"./dlitem":27}],27:[function(require,module,exports){
+},{"../../utils":4,"./_list":54,"../../block":3,"./dlitem":27}],27:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 var Item  = require('./_item') ;
@@ -2428,7 +2428,7 @@ var Deadline = Block.define({
 });
 
 module.exports = exports = Deadline;
-},{"../../utils":4,"../../block":3}],34:[function(require,module,exports){
+},{"../../utils":4,"../../block":3}],35:[function(require,module,exports){
 var _U      = require('../../utils');
 var Block   = require('../../block');
 
@@ -3042,6 +3042,82 @@ module.exports = exports = html;
 
 
 },{"../src/utils":4,"jasmine-matchers":56}],60:[function(require,module,exports){
+// shim for using process in browser
+
+var process = module.exports = {};
+
+process.nextTick = (function () {
+    var canSetImmediate = typeof window !== 'undefined'
+    && window.setImmediate;
+    var canPost = typeof window !== 'undefined'
+    && window.postMessage && window.addEventListener
+    ;
+
+    if (canSetImmediate) {
+        return function (f) { return window.setImmediate(f) };
+    }
+
+    if (canPost) {
+        var queue = [];
+        window.addEventListener('message', function (ev) {
+            if (ev.source === window && ev.data === 'process-tick') {
+                ev.stopPropagation();
+                if (queue.length > 0) {
+                    var fn = queue.shift();
+                    fn();
+                }
+            }
+        }, true);
+
+        return function nextTick(fn) {
+            queue.push(fn);
+            window.postMessage('process-tick', '*');
+        };
+    }
+
+    return function nextTick(fn) {
+        setTimeout(fn, 0);
+    };
+})();
+
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+
+process.binding = function (name) {
+    throw new Error('process.binding is not supported');
+}
+
+// TODO(shtylman)
+process.cwd = function () { return '/' };
+process.chdir = function (dir) {
+    throw new Error('process.chdir is not supported');
+};
+
+},{}],56:[function(require,module,exports){
+(function(process){var matcherFiles = [
+  'toBe.js',
+  'toContain.js',
+  'toHave.js',
+  'toStartEndWith.js',
+  'toThrow.js'
+];
+
+var i, l;
+
+if (typeof process !== 'undefined' && typeof process.nextTick !== 'undefined') {
+  // node.js
+  for(i=0, l=matcherFiles.length; i<l; i++) {
+    require('./' + matcherFiles[i]);
+  }
+} else {
+  // fallback
+  console.warn('[jasmine-matchers] Since v0.2.0 please import each matcher-file separately: ' + matcherFiles.join(', '));
+}
+
+})(require("__browserify_process"))
+},{"__browserify_process":60}],61:[function(require,module,exports){
 (function() {
   var Config, Headline;
 
@@ -3104,7 +3180,7 @@ module.exports = exports = html;
 }).call(this);
 
 
-},{"../../src/config":6,"../../src/block/headline":12,"jasmine-matchers":56}],61:[function(require,module,exports){
+},{"../../src/block/headline":12,"../../src/config":6,"jasmine-matchers":56}],62:[function(require,module,exports){
 (function() {
   var Lines, txt1, txt2;
 
@@ -3197,7 +3273,7 @@ module.exports = exports = html;
 }).call(this);
 
 
-},{"../../src/block/lines":49,"jasmine-matchers":56}],62:[function(require,module,exports){
+},{"../../src/block/lines":49,"jasmine-matchers":56}],63:[function(require,module,exports){
 (function() {
   var Block, Lines, Org, Section;
 
@@ -3251,7 +3327,7 @@ module.exports = exports = html;
 }).call(this);
 
 
-},{"../../src/core":7,"../../src/block":3,"../../src/block/section":35,"../../src/block/lines":49,"jasmine-matchers":56}],63:[function(require,module,exports){
+},{"../../src/core":7,"../../src/block":3,"../../src/block/section":34,"../../src/block/lines":49,"jasmine-matchers":56}],64:[function(require,module,exports){
 (function() {
   var Emphasis, Inline;
 
@@ -3326,7 +3402,7 @@ module.exports = exports = html;
 }).call(this);
 
 
-},{"../../src/inline":11,"../../src/inline/emphasis":45,"jasmine-matchers":56}],64:[function(require,module,exports){
+},{"../../src/inline":11,"../../src/inline/emphasis":45,"jasmine-matchers":56}],65:[function(require,module,exports){
 (function() {
   var Entity, Inline;
 
@@ -3359,7 +3435,7 @@ module.exports = exports = html;
 }).call(this);
 
 
-},{"../../src/inline":11,"../../src/inline/entity":41,"jasmine-matchers":56}],65:[function(require,module,exports){
+},{"../../src/inline":11,"../../src/inline/entity":41,"jasmine-matchers":56}],66:[function(require,module,exports){
 (function() {
   var Inline, Link;
 
@@ -3413,7 +3489,7 @@ module.exports = exports = html;
 }).call(this);
 
 
-},{"../../src/inline":11,"../../src/inline/link":38,"jasmine-matchers":56}],66:[function(require,module,exports){
+},{"../../src/inline":11,"../../src/inline/link":38,"jasmine-matchers":56}],67:[function(require,module,exports){
 (function() {
   var Inline, Regular;
 
@@ -3464,7 +3540,7 @@ module.exports = exports = html;
 }).call(this);
 
 
-},{"../../src/inline":11,"../../src/inline/regular":47,"jasmine-matchers":56}],67:[function(require,module,exports){
+},{"../../src/inline":11,"../../src/inline/regular":47,"jasmine-matchers":56}],68:[function(require,module,exports){
 (function() {
   var RenderEngine;
 
@@ -3481,7 +3557,7 @@ module.exports = exports = html;
 }).call(this);
 
 
-},{"../../src/render/engine":8,"jasmine-matchers":56}],68:[function(require,module,exports){
+},{"../../src/render/engine":8,"jasmine-matchers":56}],69:[function(require,module,exports){
 (function() {
   var Comment, Document;
 
@@ -3510,81 +3586,5 @@ module.exports = exports = html;
 }).call(this);
 
 
-},{"../../../src/document":13,"../../../src/block/beginend/comment":23,"jasmine-matchers":56}],69:[function(require,module,exports){
-// shim for using process in browser
-
-var process = module.exports = {};
-
-process.nextTick = (function () {
-    var canSetImmediate = typeof window !== 'undefined'
-    && window.setImmediate;
-    var canPost = typeof window !== 'undefined'
-    && window.postMessage && window.addEventListener
-    ;
-
-    if (canSetImmediate) {
-        return function (f) { return window.setImmediate(f) };
-    }
-
-    if (canPost) {
-        var queue = [];
-        window.addEventListener('message', function (ev) {
-            if (ev.source === window && ev.data === 'process-tick') {
-                ev.stopPropagation();
-                if (queue.length > 0) {
-                    var fn = queue.shift();
-                    fn();
-                }
-            }
-        }, true);
-
-        return function nextTick(fn) {
-            queue.push(fn);
-            window.postMessage('process-tick', '*');
-        };
-    }
-
-    return function nextTick(fn) {
-        setTimeout(fn, 0);
-    };
-})();
-
-process.title = 'browser';
-process.browser = true;
-process.env = {};
-process.argv = [];
-
-process.binding = function (name) {
-    throw new Error('process.binding is not supported');
-}
-
-// TODO(shtylman)
-process.cwd = function () { return '/' };
-process.chdir = function (dir) {
-    throw new Error('process.chdir is not supported');
-};
-
-},{}],56:[function(require,module,exports){
-(function(process){var matcherFiles = [
-  'toBe.js',
-  'toContain.js',
-  'toHave.js',
-  'toStartEndWith.js',
-  'toThrow.js'
-];
-
-var i, l;
-
-if (typeof process !== 'undefined' && typeof process.nextTick !== 'undefined') {
-  // node.js
-  for(i=0, l=matcherFiles.length; i<l; i++) {
-    require('./' + matcherFiles[i]);
-  }
-} else {
-  // fallback
-  console.warn('[jasmine-matchers] Since v0.2.0 please import each matcher-file separately: ' + matcherFiles.join(', '));
-}
-
-})(require("__browserify_process"))
-},{"__browserify_process":69}]},{},[3,52,22,23,1,20,21,25,24,48,12,17,49,53,54,26,27,30,31,28,29,37,14,15,34,16,35,33,36,32,19,18,6,7,13,50,11,45,41,40,39,46,38,47,43,44,42,10,9,8,2,5,4,55,68,60,61,62,57,51,63,64,65,66,67,58,59])
+},{"../../../src/document":13,"../../../src/block/beginend/comment":23,"jasmine-matchers":56}]},{},[3,52,22,23,1,20,21,25,24,48,12,17,49,53,54,26,27,30,31,28,29,37,14,15,35,16,34,33,36,32,19,18,6,7,13,50,11,45,41,40,39,46,38,47,43,44,42,10,9,8,2,5,4,55,69,61,62,63,57,51,64,65,66,67,68,58,59])
 ;

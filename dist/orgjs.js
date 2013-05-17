@@ -609,7 +609,7 @@ Headline.parser = function (org) {
   var priorities = config.headlinePriorities;
 
   // Build the regexp
-  var str = "(\\**)%s+";
+  var str = "(\\**)%s*";
   str += "(?:(%TODOS)%s+)?";
   str += "(?:\\[\\#(%PRIORITIES)\\]%s+)?";
   str += "(.*?)%s*";
@@ -749,7 +749,7 @@ var _U     = require('../utils');
 var _      = _U._;
 var Inline = require('../inline');
 
-var linkDescRgxp   = /\[\[(\S*?[^\s\\])\](?:\[([\s\S]*[^\\])\])?\]/g;
+var linkDescRgxp   = /\[\[([^\]]*?[^\s\\])\](?:\[([^\]]*[^\\])\])?\]/g;
 var linkBareRgxp   = /((?:http|https|ftp|mailto|file|news|shell|elisp|doi|message):(?:[\w\.\/\?\*\+#@!$&'_~:,;=-]|%[\dA-F]{2})+)/ig;
 
 var Link = Inline.define({
@@ -2389,7 +2389,7 @@ TreeNode.prototype = {
 };
 
 module.exports = exports = TreeNode;
-},{"./core":1,"./utils":2}],49:[function(require,module,exports){
+},{"./utils":2,"./core":1}],49:[function(require,module,exports){
 var _U    = require('./utils');
 var Lines = require('./block/lines');
 
