@@ -13,8 +13,8 @@
   <script type="text/javascript">
     var org = new Org();
     
-    var doc = org.parseDocumentAt('./tricky.org');
-
+    var doc = org.parseDocumentAt('./epistolae.org');
+    console.log(doc);
     var tocRenderer = org.render.defaults.htmlToc;
     var toc = tocRenderer.render(doc);
     var nav = document.querySelector('nav.toc');

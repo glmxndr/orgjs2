@@ -21,7 +21,11 @@ Some header content. Some /emphasis/, some *bold text*, some _underlined
 through text+, then some sub_script, son super^script, 
 some 10_{0.45} and some 10^{0.45}.
 
-  #+INCLUDE: "./tricky.org" src org
+#+TYPE: i
+#+START: 6
+1. some
+3. ordered
+2. list
 
   #+BEGIN_EXAMPLE
   metaDeclaration: /\s*#\+[A-Z0-9_]+:$/
@@ -206,3 +210,5 @@ Some tricky stuff... /+/ oh and /+/.
   #+END_CENTER
 
     [[./img/hb.jpg]]
+
+    #+INCLUDE: "./tricky.org" src org
