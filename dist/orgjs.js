@@ -82,7 +82,7 @@ global.Org = Org;
 
 module.exports = exports = Org;
 })()
-},{"./render/engine":2,"./utils":3,"./render/default/html":4,"./render/default/html-toc":5,"./block":6,"./inline":7,"./config":8,"./block/headline":9,"./document":10,"./block/properties/clockline":11,"./block/properties/deadline":12,"./block/properties/scheduled":13,"./block/illust":14,"./block/special/hr":15,"./block/special/fndef":16,"./block/beginend/example":17,"./block/beginend/quote":18,"./block/beginend/center":19,"./block/beginend/comment":20,"./block/beginend/verse":21,"./block/beginend/src":22,"./block/lists/dlist":23,"./block/lists/dlitem":24,"./block/lists/ulist":25,"./block/lists/ulitem":26,"./block/lists/olist":27,"./block/lists/olitem":28,"./block/special/drawer":29,"./block/special/colon":30,"./block/section":31,"./block/properties/propdef":32,"./block/special/commentline":33,"./block/para":34,"./inline/link":35,"./inline/latex":36,"./inline/fnref":37,"./inline/entity":38,"./inline/verbatim":39,"./inline/sub":40,"./inline/sup":41,"./inline/emphasis":42,"./inline/linebreak":43,"./inline/regular":44}],3:[function(require,module,exports){
+},{"./utils":2,"./render/engine":3,"./render/default/html":4,"./render/default/html-toc":5,"./block":6,"./inline":7,"./config":8,"./block/headline":9,"./document":10,"./block/properties/clockline":11,"./block/properties/deadline":12,"./block/properties/scheduled":13,"./block/illust":14,"./block/special/hr":15,"./block/special/fndef":16,"./block/beginend/example":17,"./block/beginend/center":18,"./block/beginend/quote":19,"./block/beginend/comment":20,"./block/beginend/verse":21,"./block/beginend/src":22,"./block/lists/dlist":23,"./block/lists/dlitem":24,"./block/lists/ulist":25,"./block/lists/ulitem":26,"./block/lists/olist":27,"./block/lists/olitem":28,"./block/special/drawer":29,"./block/special/colon":30,"./block/section":31,"./block/properties/propdef":32,"./block/special/commentline":33,"./block/para":34,"./inline/link":35,"./inline/latex":36,"./inline/fnref":37,"./inline/entity":38,"./inline/verbatim":39,"./inline/sub":40,"./inline/sup":41,"./inline/emphasis":42,"./inline/linebreak":43,"./inline/regular":44}],2:[function(require,module,exports){
 (function(){require('./shim');
 
 dependency = function (name, alternate) {
@@ -324,7 +324,66 @@ _U.id = _U.incrementor();
 
 module.exports = exports = _U;
 })()
-},{"./shim":45}],7:[function(require,module,exports){
+},{"./shim":45}],6:[function(require,module,exports){
+var _U       = require('./utils');
+var _        = _U._;
+var TreeNode = require('./tree');
+
+var Block = function (parent) {
+  TreeNode.call(this, parent);
+};
+
+_U.extendProto(Block, TreeNode, {
+  init         : function () {},
+  parentIndent : function () {
+    return (this.parent && this.parent.indent) ? this.parent.indent : 0;
+  }
+});
+
+var prec = Block.precedence = {};
+
+/**
+ * Allows to register a new Block constructor at a given precedence level.
+ * @param  {Block} Constr the block constructor
+ * @param  {String} level  the level name, must be present in Block.levels
+ */
+Block.register = function (level, Constr) {
+  if (prec[level]) {Block.register(level + 1, Constr);}
+  else { prec[level] = Constr; }
+  return Constr;
+};
+
+/**
+ * Get the Block constructor matching the given lines.
+ * @param  {Array} lines the following lines
+ * @return {Block}       the constructor
+ */
+Block.get = function (lines, parent) {
+  var result;
+  _.each(_U.ordered(prec), function(Constr){
+    if (Constr.match && Constr.match(lines, parent)) { 
+      result = Constr; 
+      return false; 
+    }
+  });
+  return result;
+};
+
+Block.define = function (obj) {
+  var Parent = (obj.parent || Block);
+  var Result = function () {
+    Parent.apply(this, arguments);
+    this.type = obj.type;
+    if (this.init) { this.init.apply(this, arguments); }
+  };
+  Result.type = obj.type;
+  Result.match = obj.match || Parent.match || function () { return false; };
+  _U.extendProto(Result, Parent, obj.methods);
+  return Result;
+};
+
+module.exports = exports = Block;
+},{"./utils":2,"./tree":46}],7:[function(require,module,exports){
 var _U       = require('./utils');
 var _        = _U._;
 var Lines    = require('./block/lines');
@@ -395,7 +454,7 @@ Inline.parser = function (conf) {
 //------------------------------------------------------------------------------
 
 module.exports = exports = Inline;
-},{"./utils":3,"./block/lines":46,"./tree":47}],8:[function(require,module,exports){
+},{"./utils":2,"./block/lines":47,"./tree":46}],8:[function(require,module,exports){
 var _ = require('./utils')._;
 
 var Config = {};
@@ -422,7 +481,7 @@ Config.prepare = function (params) {
 };
 
 module.exports = exports = Config;
-},{"./utils":3}],10:[function(require,module,exports){
+},{"./utils":2}],10:[function(require,module,exports){
 var _U      = require('./utils');
 var Block   = require('./block');
 var Content = require('./block/content');
@@ -479,66 +538,7 @@ Document.parser = function (org) {
 };
 
 module.exports = exports = Document;
-},{"./utils":3,"./block":6,"./block/content":48,"./block/section":31,"./config":8,"./block/lines":46,"./include":49,"./core":1}],6:[function(require,module,exports){
-var _U       = require('./utils');
-var _        = _U._;
-var TreeNode = require('./tree');
-
-var Block = function (parent) {
-  TreeNode.call(this, parent);
-};
-
-_U.extendProto(Block, TreeNode, {
-  init         : function () {},
-  parentIndent : function () {
-    return (this.parent && this.parent.indent) ? this.parent.indent : 0;
-  }
-});
-
-var prec = Block.precedence = {};
-
-/**
- * Allows to register a new Block constructor at a given precedence level.
- * @param  {Block} Constr the block constructor
- * @param  {String} level  the level name, must be present in Block.levels
- */
-Block.register = function (level, Constr) {
-  if (prec[level]) {Block.register(level + 1, Constr);}
-  else { prec[level] = Constr; }
-  return Constr;
-};
-
-/**
- * Get the Block constructor matching the given lines.
- * @param  {Array} lines the following lines
- * @return {Block}       the constructor
- */
-Block.get = function (lines, parent) {
-  var result;
-  _.each(_U.ordered(prec), function(Constr){
-    if (Constr.match && Constr.match(lines, parent)) { 
-      result = Constr; 
-      return false; 
-    }
-  });
-  return result;
-};
-
-Block.define = function (obj) {
-  var Parent = (obj.parent || Block);
-  var Result = function () {
-    Parent.apply(this, arguments);
-    this.type = obj.type;
-    if (this.init) { this.init.apply(this, arguments); }
-  };
-  Result.type = obj.type;
-  Result.match = obj.match || Parent.match || function () { return false; };
-  _U.extendProto(Result, Parent, obj.methods);
-  return Result;
-};
-
-module.exports = exports = Block;
-},{"./utils":3,"./tree":47}],2:[function(require,module,exports){
+},{"./utils":2,"./block":6,"./block/content":48,"./block/section":31,"./config":8,"./block/lines":47,"./include":49,"./core":1}],3:[function(require,module,exports){
 var _U       = require('../utils');
 var _        = _U._;
 var TreeNode = require('../tree');
@@ -579,7 +579,7 @@ RenderEngine.prototype = {
 
 module.exports = exports = RenderEngine;
 
-},{"../utils":3,"../tree":47}],9:[function(require,module,exports){
+},{"../utils":2,"../tree":46}],9:[function(require,module,exports){
 var _U     = require('../utils');
 var Config = require('../config');
 var Org    = require('../core');
@@ -629,7 +629,7 @@ Headline.parser = function (org) {
 };
 
 module.exports = exports = Headline;
-},{"../utils":3,"../config":8,"../core":1,"../block":6}],14:[function(require,module,exports){
+},{"../utils":2,"../config":8,"../core":1,"../block":6}],14:[function(require,module,exports){
 var _U    = require('../utils');
 var Block = require('../block');
 
@@ -653,7 +653,7 @@ var Illust = Block.define({
 });
 
 module.exports = exports = Illust;
-},{"../utils":3,"../block":6}],31:[function(require,module,exports){
+},{"../utils":2,"../block":6}],31:[function(require,module,exports){
 var _U = require('../utils');
 var _  = _U._;
 
@@ -701,7 +701,7 @@ _U.extendProto(Section, Block, {
 });
 
 module.exports = exports = Section;
-},{"../utils":3,"../block":6,"./content":48}],34:[function(require,module,exports){
+},{"../utils":2,"../block":6,"./content":48}],34:[function(require,module,exports){
 var _U      = require('../utils');
 var Block   = require('../block');
 var Lines   = require('./lines');
@@ -744,7 +744,7 @@ var Para = Block.define({
 });
 
 module.exports = exports = Para;
-},{"../utils":3,"../block":6,"./lines":46}],35:[function(require,module,exports){
+},{"../utils":2,"../block":6,"./lines":47}],35:[function(require,module,exports){
 var _U     = require('../utils');
 var _      = _U._;
 var Inline = require('../inline');
@@ -775,7 +775,7 @@ var Link = Inline.define({
 
 module.exports = exports = Link;
 
-},{"../utils":3,"../inline":7}],36:[function(require,module,exports){
+},{"../utils":2,"../inline":7}],36:[function(require,module,exports){
 var _U     = require('../utils');
 var _      = _U._;
 var Inline = require('../inline');
@@ -817,7 +817,7 @@ var Latex = Inline.define({
 module.exports = exports = Latex;
 
 
-},{"../utils":3,"../inline":7}],37:[function(require,module,exports){
+},{"../utils":2,"../inline":7}],37:[function(require,module,exports){
 var _U     = require('../utils');
 var Inline = require('../inline');
 var FnDef  = require('../block/special/fndef');
@@ -858,16 +858,15 @@ var FnRef = Inline.define({
 });
 
 module.exports = exports = FnRef;
-},{"../utils":3,"../inline":7,"../block/special/fndef":16,"../block/lines":46}],38:[function(require,module,exports){
+},{"../utils":2,"../inline":7,"../block/special/fndef":16,"../block/lines":47}],38:[function(require,module,exports){
 var _U     = require('../utils');
 var Inline = require('../inline');
 
 var Entity = Inline.define({
   type: 'entity',
   replace: function (txt, parent, tp, tokens) {
-    txt = txt.replace(/\\([a-z]+\d*)\b(\\?\s)?/ig, function (m, e, space) {
-      space = space || '';
-      space = (space.length == 2 ? ' ' : '');
+    txt = txt.replace(/\\([a-z]+\d*\b)((?:\{\}|\\)?\s?)/ig, function (m, e, end) {
+      var space = (end.match(/\s$/) && end.length > 1 ? ' ' : '');
       if (!Entity.store[e]) { return m; }
       var entity     = new Entity(parent);
       entity.raw     = m;
@@ -1277,7 +1276,7 @@ define("Diamond","\\diamond","&diamond;","[diamond]","[diamond]","⋄");
 define("loz","\\diamond","&loz;","[lozenge]","[lozenge]","◊");
 
 module.exports = exports = Entity;
-},{"../utils":3,"../inline":7}],39:[function(require,module,exports){
+},{"../utils":2,"../inline":7}],39:[function(require,module,exports){
 var _U = require('../utils');
 var Inline = require('../inline');
 
@@ -1327,7 +1326,7 @@ var Code = verbTypes['='] = Inline.define({
 Verbatim.types = verbTypes;
 
 module.exports = exports = Verbatim;
-},{"../utils":3,"../inline":7}],40:[function(require,module,exports){
+},{"../utils":2,"../inline":7}],40:[function(require,module,exports){
 var _U     = require('../utils');
 var Inline = require('../inline');
 
@@ -1359,7 +1358,7 @@ var Sub = Inline.define({
 });
 
 module.exports = exports = Sub;
-},{"../utils":3,"../inline":7}],41:[function(require,module,exports){
+},{"../utils":2,"../inline":7}],41:[function(require,module,exports){
 var _U     = require('../utils');
 var Inline = require('../inline');
 var Sub    = require('./sub');
@@ -1373,7 +1372,7 @@ var Sup = Inline.define({
 });
 
 module.exports = exports = Sup;
-},{"../utils":3,"../inline":7,"./sub":40}],42:[function(require,module,exports){
+},{"../utils":2,"../inline":7,"./sub":40}],42:[function(require,module,exports){
 var _U = require('../utils');
 var Inline = require('../inline');
 
@@ -1423,7 +1422,7 @@ Emphasis.types = {
 };
 
 module.exports = exports = Emphasis;
-},{"../utils":3,"../inline":7}],43:[function(require,module,exports){
+},{"../utils":2,"../inline":7}],43:[function(require,module,exports){
 var _U     = require('../utils');
 var Inline = require('../inline');
 
@@ -1441,7 +1440,7 @@ var Linebreak = Inline.define({
 });
 
 module.exports = exports = Linebreak;
-},{"../utils":3,"../inline":7}],44:[function(require,module,exports){
+},{"../utils":2,"../inline":7}],44:[function(require,module,exports){
 var _U     = require('../utils');
 var _      = _U._;
 var Inline = require('../inline');
@@ -1464,7 +1463,7 @@ var Regular = Inline.define({
 });
 
 module.exports = exports = Regular;
-},{"../utils":3,"../inline":7}],4:[function(require,module,exports){
+},{"../utils":2,"../inline":7}],4:[function(require,module,exports){
 var _U = require('../../utils');
 var j  = _U.join;
 
@@ -1644,7 +1643,7 @@ var html = {
 
 module.exports = exports = html;
 
-},{"../../utils":3}],5:[function(require,module,exports){
+},{"../../utils":2}],5:[function(require,module,exports){
 var _U = require('../../utils');
 var j  = _U.join;
 
@@ -1665,7 +1664,7 @@ var toc = {
 };
 
 module.exports = exports = toc;
-},{"../../utils":3,"./html":4}],11:[function(require,module,exports){
+},{"../../utils":2,"./html":4}],11:[function(require,module,exports){
 var _U      = require('../../utils');
 var Block   = require('../../block');
 
@@ -1685,7 +1684,7 @@ var Clockline = Block.define({
 });
 
 module.exports = exports = Clockline;
-},{"../../utils":3,"../../block":6}],12:[function(require,module,exports){
+},{"../../utils":2,"../../block":6}],12:[function(require,module,exports){
 var _U      = require('../../utils');
 var Block   = require('../../block');
 
@@ -1705,7 +1704,7 @@ var Deadline = Block.define({
 });
 
 module.exports = exports = Deadline;
-},{"../../utils":3,"../../block":6}],13:[function(require,module,exports){
+},{"../../utils":2,"../../block":6}],13:[function(require,module,exports){
 var _U      = require('../../utils');
 var Block   = require('../../block');
 
@@ -1725,7 +1724,7 @@ var Scheduled = Block.define({
 });
 
 module.exports = exports = Scheduled;
-},{"../../utils":3,"../../block":6}],15:[function(require,module,exports){
+},{"../../utils":2,"../../block":6}],15:[function(require,module,exports){
 var _U      = require('../../utils');
 var Block   = require('../../block');
 
@@ -1744,7 +1743,7 @@ var Hr = Block.define({
 });
 
 module.exports = exports = Hr;
-},{"../../utils":3,"../../block":6}],16:[function(require,module,exports){
+},{"../../utils":2,"../../block":6}],16:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 
@@ -1788,7 +1787,7 @@ var FnDef = Block.define({
 });
 
 module.exports = exports = FnDef;
-},{"../../utils":3,"../../block":6}],17:[function(require,module,exports){
+},{"../../utils":2,"../../block":6}],17:[function(require,module,exports){
 var Block    = require('../../block');
 var BeginEnd = require('./beginend');
 
@@ -1800,6 +1799,17 @@ var Example = Block.define({
 
 module.exports = exports = Example;
 },{"../../block":6,"./beginend":50}],18:[function(require,module,exports){
+var Block    = require('../../block');
+var BeginEnd = require('./beginend');
+
+var Center = Block.define({
+  parent: BeginEnd,
+  type: 'center',
+  methods: {}
+});
+
+module.exports = exports = Center;
+},{"../../block":6,"./beginend":50}],19:[function(require,module,exports){
 var Block    = require('../../block');
 var BeginEnd = require('./beginend');
 
@@ -1822,17 +1832,6 @@ var Quote = Block.define({
 });
 
 module.exports = exports = Quote;
-},{"../../block":6,"./beginend":50}],19:[function(require,module,exports){
-var Block    = require('../../block');
-var BeginEnd = require('./beginend');
-
-var Center = Block.define({
-  parent: BeginEnd,
-  type: 'center',
-  methods: {}
-});
-
-module.exports = exports = Center;
 },{"../../block":6,"./beginend":50}],20:[function(require,module,exports){
 var Block    = require('../../block');
 var BeginEnd = require('./beginend');
@@ -1907,7 +1906,7 @@ var Dlist = List.define({
 });
 
 module.exports = exports = Dlist;
-},{"../../utils":3,"../../block":6,"./_list":51,"./dlitem":24}],24:[function(require,module,exports){
+},{"../../utils":2,"../../block":6,"./_list":51,"./dlitem":24}],24:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 var Item  = require('./_item') ;
@@ -1936,7 +1935,7 @@ var DlItem = Block.define({
 });
 
 module.exports = exports = DlItem;
-},{"../../utils":3,"../../block":6,"./_item":52}],25:[function(require,module,exports){
+},{"../../utils":2,"../../block":6,"./_item":52}],25:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 var List  = require('./_list');
@@ -1952,7 +1951,7 @@ var Ulist = List.define({
 });
 
 module.exports = exports = Ulist;
-},{"../../utils":3,"../../block":6,"./_list":51,"./ulitem":26}],26:[function(require,module,exports){
+},{"../../utils":2,"../../block":6,"./_list":51,"./ulitem":26}],26:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 var Item  = require('./_item');
@@ -1984,7 +1983,7 @@ var UlItem = Block.define({
 });
 
 module.exports = exports = UlItem;
-},{"../../utils":3,"../../block":6,"./_item":52}],27:[function(require,module,exports){
+},{"../../utils":2,"../../block":6,"./_item":52}],27:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 var List  = require('./_list');
@@ -2018,7 +2017,7 @@ var Olist = List.define({
 });
 
 module.exports = exports = Olist;
-},{"../../utils":3,"../../block":6,"./_list":51,"./olitem":28}],28:[function(require,module,exports){
+},{"../../utils":2,"../../block":6,"./_list":51,"./olitem":28}],28:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 var Item  = require('./_item') ;
@@ -2060,7 +2059,7 @@ var OlItem = Block.define({
 
 
 module.exports = exports = OlItem;
-},{"../../utils":3,"../../block":6,"./_item":52}],29:[function(require,module,exports){
+},{"../../utils":2,"../../block":6,"./_item":52}],29:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 
@@ -2089,7 +2088,7 @@ var Drawer = Block.define({
 });
 
 module.exports = exports = Drawer;
-},{"../../utils":3,"../../block":6}],30:[function(require,module,exports){
+},{"../../utils":2,"../../block":6}],30:[function(require,module,exports){
 var _U      = require('../../utils');
 var Block   = require('../../block');
 
@@ -2112,7 +2111,7 @@ var Colon = Block.define({
 });
 
 module.exports = exports = Colon;
-},{"../../utils":3,"../../block":6}],32:[function(require,module,exports){
+},{"../../utils":2,"../../block":6}],32:[function(require,module,exports){
 var _U      = require('../../utils');
 var Block   = require('../../block');
 
@@ -2142,7 +2141,7 @@ var PropDef = Block.define({
 });
 
 module.exports = exports = PropDef;
-},{"../../utils":3,"../../block":6}],33:[function(require,module,exports){
+},{"../../utils":2,"../../block":6}],33:[function(require,module,exports){
 var _U      = require('../../utils');
 var Block   = require('../../block');
 
@@ -2161,7 +2160,7 @@ var CommentLine = Block.define({
 });
 
 module.exports = exports = CommentLine;
-},{"../../utils":3,"../../block":6}],45:[function(require,module,exports){
+},{"../../utils":2,"../../block":6}],45:[function(require,module,exports){
 
 if (typeof Object.create !== 'function') {
   Object.create = function (o) {
@@ -2203,7 +2202,7 @@ if (!Array.prototype.indexOf) {
     return -1;
   };
 }
-},{}],47:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 var _U = require('./utils');
 var _  = _U._;
 
@@ -2391,7 +2390,7 @@ TreeNode.prototype = {
 };
 
 module.exports = exports = TreeNode;
-},{"./utils":3,"./core":1}],49:[function(require,module,exports){
+},{"./utils":2,"./core":1}],49:[function(require,module,exports){
 var _U    = require('./utils');
 var Lines = require('./block/lines');
 
@@ -2503,7 +2502,7 @@ Include.prototype = {
 };
 
 module.exports = exports = Include;
-},{"./utils":3,"./block/lines":46}],46:[function(require,module,exports){
+},{"./utils":2,"./block/lines":47}],47:[function(require,module,exports){
 var _U = require('../utils');
 var _  = _U._;
 
@@ -2637,7 +2636,7 @@ Lines.prototype = {
 };
 
 module.exports = exports = Lines;
-},{"../utils":3}],48:[function(require,module,exports){
+},{"../utils":2}],48:[function(require,module,exports){
 var _U      = require('../utils');
 var Block   = require('../block');
 
@@ -2662,7 +2661,7 @@ _U.extendProto(Content, Block, {
 });
 
 module.exports = exports = Content;
-},{"../utils":3,"../block":6}],50:[function(require,module,exports){
+},{"../utils":2,"../block":6}],50:[function(require,module,exports){
 var _U    = require('../../utils');
 var _     = _U._;
 var Block = require('../../block');
@@ -2703,7 +2702,7 @@ var BeginEnd = (function () {
 }());
 
 module.exports = exports = BeginEnd;
-},{"../../utils":3,"../../block":6}],51:[function(require,module,exports){
+},{"../../utils":2,"../../block":6}],51:[function(require,module,exports){
 var _U    = require('../../utils');
 var _     = _U._;
 var Block = require('../../block');
@@ -2740,7 +2739,7 @@ List.define = function (obj) {
 };
 
 module.exports = exports = List;
-},{"../../utils":3,"../../block":6}],52:[function(require,module,exports){
+},{"../../utils":2,"../../block":6}],52:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 
@@ -2765,5 +2764,5 @@ var Item = Block.define({
 });
 
 module.exports = exports = Item;
-},{"../../utils":3,"../../block":6}]},{},[1])
+},{"../../utils":2,"../../block":6}]},{},[1])
 ;

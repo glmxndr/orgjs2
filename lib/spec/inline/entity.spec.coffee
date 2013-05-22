@@ -16,25 +16,34 @@ describe 'Entity', ->
     it 'works with entities with capitals', ->
       txtInit = "Starting \\Agrave; the text."
       txt = Entity.replace(txtInit, parent, 'TKN', tokens)
-      expect(txt).toMatch /Starting TKN:[^;]+?;; the text./
+      expect(txt).toMatch /Starting TKN:\d+;; the text./
 
     it 'works with entities ending with numbers', ->
       txtInit = "Starting \\frac12; the text."
       txt = Entity.replace(txtInit, parent, 'TKN', tokens)
-      expect(txt).toMatch /Starting TKN:[^;]+?;; the text./
+      expect(txt).toMatch /Starting TKN:\d+;; the text./
 
     it 'should treat correctly an entity in the text', ->
       txtInit = "Starting \\alpha; the text."
       txt = Entity.replace(txtInit, parent, 'TKN', tokens)
-      expect(txt).toMatch /Starting TKN:[^;]+?;; the text./
+      expect(txt).toMatch /Starting TKN:\d+;; the text./
 
     it 'suppresses the unescaped space following the entity', ->
       txtInit = "Starting \\alpha the text."
       txt = Entity.replace(txtInit, parent, 'TKN', tokens)
-      expect(txt).toMatch /Starting TKN:[^;]+?;the text./
+      expect(txt).toMatch /Starting TKN:\d+;the text./
 
     it 'keeps the escaped space following the entity', ->
       txtInit = "Starting \\alpha\\ the text."
       txt = Entity.replace(txtInit, parent, 'TKN', tokens)
-      expect(txt).toMatch /Starting TKN:[^;]+?; the text./
+      expect(txt).toMatch /Starting TKN:\d+; the text./
     
+    it 'keeps the space following the entity after the optional braces', ->
+      txtInit = "Starting \\alpha{} the text."
+      txt = Entity.replace(txtInit, parent, 'TKN', tokens)
+      expect(txt).toMatch /Starting TKN:\d+; the text./
+
+    it 'understands braces as the end of the entity', ->
+      txtInit = "Starting \\alpha{}the text."
+      txt = Entity.replace(txtInit, parent, 'TKN', tokens)
+      expect(txt).toMatch /Starting TKN:\d+;the text./

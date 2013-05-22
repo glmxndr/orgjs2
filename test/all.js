@@ -1311,9 +1311,8 @@ var Inline = require('../inline');
 var Entity = Inline.define({
   type: 'entity',
   replace: function (txt, parent, tp, tokens) {
-    txt = txt.replace(/\\([a-z]+\d*)\b(\\?\s)?/ig, function (m, e, space) {
-      space = space || '';
-      space = (space.length == 2 ? ' ' : '');
+    txt = txt.replace(/\\([a-z]+\d*\b)((?:\{\}|\\)?\s?)/ig, function (m, e, end) {
+      var space = (end.match(/\s$/) && end.length > 1 ? ' ' : '');
       if (!Entity.store[e]) { return m; }
       var entity     = new Entity(parent);
       entity.raw     = m;
@@ -2237,7 +2236,7 @@ var Dlist = List.define({
 });
 
 module.exports = exports = Dlist;
-},{"../../block":3,"../../utils":4,"./_list":54,"./dlitem":27}],27:[function(require,module,exports){
+},{"../../utils":4,"../../block":3,"./_list":54,"./dlitem":27}],27:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 var Item  = require('./_item') ;
@@ -2410,7 +2409,7 @@ var Clockline = Block.define({
 });
 
 module.exports = exports = Clockline;
-},{"../../block":3,"../../utils":4}],15:[function(require,module,exports){
+},{"../../utils":4,"../../block":3}],15:[function(require,module,exports){
 var _U      = require('../../utils');
 var Block   = require('../../block');
 
@@ -2635,7 +2634,7 @@ var toc = {
 };
 
 module.exports = exports = toc;
-},{"../../utils":4,"./html":9}],9:[function(require,module,exports){
+},{"./html":9,"../../utils":4}],9:[function(require,module,exports){
 var _U = require('../../utils');
 var j  = _U.join;
 
@@ -3429,35 +3428,49 @@ if (typeof process !== 'undefined' && typeof process.nextTick !== 'undefined') {
 
         txtInit = "Starting \\Agrave; the text.";
         txt = Entity.replace(txtInit, parent, 'TKN', tokens);
-        return expect(txt).toMatch(/Starting TKN:[^;]+?;; the text./);
+        return expect(txt).toMatch(/Starting TKN:\d+;; the text./);
       });
       it('works with entities ending with numbers', function() {
         var txt, txtInit;
 
         txtInit = "Starting \\frac12; the text.";
         txt = Entity.replace(txtInit, parent, 'TKN', tokens);
-        return expect(txt).toMatch(/Starting TKN:[^;]+?;; the text./);
+        return expect(txt).toMatch(/Starting TKN:\d+;; the text./);
       });
       it('should treat correctly an entity in the text', function() {
         var txt, txtInit;
 
         txtInit = "Starting \\alpha; the text.";
         txt = Entity.replace(txtInit, parent, 'TKN', tokens);
-        return expect(txt).toMatch(/Starting TKN:[^;]+?;; the text./);
+        return expect(txt).toMatch(/Starting TKN:\d+;; the text./);
       });
       it('suppresses the unescaped space following the entity', function() {
         var txt, txtInit;
 
         txtInit = "Starting \\alpha the text.";
         txt = Entity.replace(txtInit, parent, 'TKN', tokens);
-        return expect(txt).toMatch(/Starting TKN:[^;]+?;the text./);
+        return expect(txt).toMatch(/Starting TKN:\d+;the text./);
       });
-      return it('keeps the escaped space following the entity', function() {
+      it('keeps the escaped space following the entity', function() {
         var txt, txtInit;
 
         txtInit = "Starting \\alpha\\ the text.";
         txt = Entity.replace(txtInit, parent, 'TKN', tokens);
-        return expect(txt).toMatch(/Starting TKN:[^;]+?; the text./);
+        return expect(txt).toMatch(/Starting TKN:\d+; the text./);
+      });
+      it('keeps the space following the entity after the optional braces', function() {
+        var txt, txtInit;
+
+        txtInit = "Starting \\alpha{} the text.";
+        txt = Entity.replace(txtInit, parent, 'TKN', tokens);
+        return expect(txt).toMatch(/Starting TKN:\d+; the text./);
+      });
+      return it('understands braces as the end of the entity', function() {
+        var txt, txtInit;
+
+        txtInit = "Starting \\alpha{}the text.";
+        txt = Entity.replace(txtInit, parent, 'TKN', tokens);
+        return expect(txt).toMatch(/Starting TKN:\d+;the text./);
       });
     });
   });
@@ -3616,5 +3629,5 @@ if (typeof process !== 'undefined' && typeof process.nextTick !== 'undefined') {
 }).call(this);
 
 
-},{"../../../src/document":13,"../../../src/block/beginend/comment":23,"jasmine-matchers":56}]},{},[3,52,22,1,23,20,21,25,24,48,12,17,49,53,54,26,27,30,31,28,29,37,14,15,35,16,34,33,36,32,19,18,6,7,13,50,11,45,41,40,39,46,38,47,43,44,42,10,9,8,2,5,4,55,69,61,62,63,57,51,64,65,66,67,68,58,59])
+},{"../../../src/document":13,"../../../src/block/beginend/comment":23,"jasmine-matchers":56}]},{},[3,52,22,23,1,20,21,25,24,48,12,17,49,53,54,26,27,30,31,28,29,37,14,15,35,16,34,33,36,32,19,18,6,7,13,50,11,45,41,40,39,46,38,47,43,44,42,10,9,8,2,5,4,55,69,61,62,63,57,51,64,65,66,67,68,58,59])
 ;
