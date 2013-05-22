@@ -1311,14 +1311,16 @@ var Inline = require('../inline');
 var Entity = Inline.define({
   type: 'entity',
   replace: function (txt, parent, tp, tokens) {
-    txt = txt.replace(/\\([a-z]+\d*)\b/g, function (m, e) {
+    txt = txt.replace(/\\([a-z]+\d*)\b(\\?\s)?/ig, function (m, e, space) {
+      space = space || '';
+      space = (space.length == 2 ? ' ' : '');
       if (!Entity.store[e]) { return m; }
       var entity     = new Entity(parent);
       entity.raw     = m;
       entity.content = Entity.store[e];
       var token      = _U.newToken(tp);
       tokens[token]  = entity;
-      return token;
+      return token + space;
     });
     return txt;
   }
@@ -2235,7 +2237,7 @@ var Dlist = List.define({
 });
 
 module.exports = exports = Dlist;
-},{"../../utils":4,"./_list":54,"../../block":3,"./dlitem":27}],27:[function(require,module,exports){
+},{"../../block":3,"../../utils":4,"./_list":54,"./dlitem":27}],27:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 var Item  = require('./_item') ;
@@ -2408,7 +2410,7 @@ var Clockline = Block.define({
 });
 
 module.exports = exports = Clockline;
-},{"../../utils":4,"../../block":3}],15:[function(require,module,exports){
+},{"../../block":3,"../../utils":4}],15:[function(require,module,exports){
 var _U      = require('../../utils');
 var Block   = require('../../block');
 
@@ -3180,7 +3182,7 @@ if (typeof process !== 'undefined' && typeof process.nextTick !== 'undefined') {
 }).call(this);
 
 
-},{"../../src/block/headline":12,"../../src/config":6,"jasmine-matchers":56}],62:[function(require,module,exports){
+},{"../../src/config":6,"../../src/block/headline":12,"jasmine-matchers":56}],62:[function(require,module,exports){
 (function() {
   var Lines, txt1, txt2;
 
@@ -3422,12 +3424,40 @@ if (typeof process !== 'undefined' && typeof process.nextTick !== 'undefined') {
         parent = new Inline();
         return tokens = {};
       });
-      return it('should treat correctly an entity in the text', function() {
+      it('works with entities with capitals', function() {
+        var txt, txtInit;
+
+        txtInit = "Starting \\Agrave; the text.";
+        txt = Entity.replace(txtInit, parent, 'TKN', tokens);
+        return expect(txt).toMatch(/Starting TKN:[^;]+?;; the text./);
+      });
+      it('works with entities ending with numbers', function() {
+        var txt, txtInit;
+
+        txtInit = "Starting \\frac12; the text.";
+        txt = Entity.replace(txtInit, parent, 'TKN', tokens);
+        return expect(txt).toMatch(/Starting TKN:[^;]+?;; the text./);
+      });
+      it('should treat correctly an entity in the text', function() {
         var txt, txtInit;
 
         txtInit = "Starting \\alpha; the text.";
         txt = Entity.replace(txtInit, parent, 'TKN', tokens);
         return expect(txt).toMatch(/Starting TKN:[^;]+?;; the text./);
+      });
+      it('suppresses the unescaped space following the entity', function() {
+        var txt, txtInit;
+
+        txtInit = "Starting \\alpha the text.";
+        txt = Entity.replace(txtInit, parent, 'TKN', tokens);
+        return expect(txt).toMatch(/Starting TKN:[^;]+?;the text./);
+      });
+      return it('keeps the escaped space following the entity', function() {
+        var txt, txtInit;
+
+        txtInit = "Starting \\alpha\\ the text.";
+        txt = Entity.replace(txtInit, parent, 'TKN', tokens);
+        return expect(txt).toMatch(/Starting TKN:[^;]+?; the text./);
       });
     });
   });
@@ -3586,5 +3616,5 @@ if (typeof process !== 'undefined' && typeof process.nextTick !== 'undefined') {
 }).call(this);
 
 
-},{"../../../src/document":13,"../../../src/block/beginend/comment":23,"jasmine-matchers":56}]},{},[3,52,22,23,1,20,21,25,24,48,12,17,49,53,54,26,27,30,31,28,29,37,14,15,35,16,34,33,36,32,19,18,6,7,13,50,11,45,41,40,39,46,38,47,43,44,42,10,9,8,2,5,4,55,69,61,62,63,57,51,64,65,66,67,68,58,59])
+},{"../../../src/document":13,"../../../src/block/beginend/comment":23,"jasmine-matchers":56}]},{},[3,52,22,1,23,20,21,25,24,48,12,17,49,53,54,26,27,30,31,28,29,37,14,15,35,16,34,33,36,32,19,18,6,7,13,50,11,45,41,40,39,46,38,47,43,44,42,10,9,8,2,5,4,55,69,61,62,63,57,51,64,65,66,67,68,58,59])
 ;
