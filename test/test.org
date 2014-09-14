@@ -15,8 +15,21 @@
 
 This is the test page for Org mode parser orgjs.
 
+Let's have a table here:
+
+| Name  | Phone | Age |
+|-------+-------+-----|
+| Peter |  1234 |  17 |
+| Anna  |  4321 |  25 |
+
 * Footnotes
   This section should contain footnotes[fn::Even inline ones.].
+
+  #+CAPTION: "Peter and Anna" table    
+  | Name  | Phone | Age |
+  |-------+-------+-----|
+  | Peter |  1234 |  17 |
+  | Anna  |  4321 |  25 |
 
   This line contains a simple reference to the first footnote[fn:1].
 

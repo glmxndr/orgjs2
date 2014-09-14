@@ -28,12 +28,20 @@ html {
 table {
   border-collapse: collapse;
   border-spacing: 0;
+  width: 100%;
 }
 
-caption, th, td {
-  text-align: left;
-  font-weight: normal;
-  vertical-align: middle;
+table thead td {
+  font-weight: bold;
+  text-align: center;
+}
+
+table thead tr {
+  border-bottom: 1px solid gray;
+}
+
+td {
+  text-align: center;
 }
 
 q, blockquote {

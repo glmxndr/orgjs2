@@ -42,6 +42,12 @@ if (!Array.prototype.indexOf) {
     return -1;
   };
 }
+
+if (!String.prototype.trim) {
+  String.prototype.trim = function () {
+    return this.replace(/^[\s\xA0]+|[\s\xA0]+$/g, '');
+  };
+}
 },{}],3:[function(require,module,exports){
 var _U       = require('./utils');
 var _        = _U._;
@@ -92,6 +98,12 @@ Block.define = function (obj) {
   var Result = function () {
     Parent.apply(this, arguments);
     this.type = obj.type;
+    var doc = this.document();
+    if (doc && doc.caption) {
+      this.caption      = doc.caption();
+      this.captionShort = doc.captionShort();
+      this.label        = doc.label();
+    }
     if (this.init) { this.init.apply(this, arguments); }
   };
   Result.type = obj.type;
@@ -171,6 +183,8 @@ Org.components = {
     Clockline  : Block.register(  50, require('./block/properties/clockline')),
     Deadline   : Block.register(  50, require('./block/properties/deadline')),
     Scheduled  : Block.register(  50, require('./block/properties/scheduled')),
+    Label      : Block.register(  50, require('./block/properties/label')),
+    Caption    : Block.register(  50, require('./block/properties/caption')),
     Illust     : Block.register(  60, require('./block/illust')),
     Hr         : Block.register( 100, require('./block/special/hr')),
     FnDef      : Block.register( 200, require('./block/special/fndef')),
@@ -186,6 +200,7 @@ Org.components = {
     UlItem     : Block.register( 530, require('./block/lists/ulitem')),
     Olist      : Block.register( 540, require('./block/lists/olist')),
     OlItem     : Block.register( 550, require('./block/lists/olitem')),
+    Table      : Block.register( 600, require('./block/table/table')),
     Drawer     : Block.register(1000, require('./block/special/drawer')),
     Colon      : Block.register(1100, require('./block/special/colon')),
     Section    : Block.register(8000, require('./block/section')),
@@ -212,7 +227,7 @@ global.Org = Org;
 
 module.exports = exports = Org;
 })()
-},{"./utils":4,"./render/engine":8,"./render/default/html":9,"./render/default/html-toc":10,"./block":3,"./inline":11,"./config":6,"./block/headline":12,"./document":13,"./block/properties/clockline":14,"./block/properties/deadline":15,"./block/properties/scheduled":16,"./block/illust":17,"./block/special/hr":18,"./block/special/fndef":19,"./block/beginend/example":20,"./block/beginend/quote":21,"./block/beginend/center":22,"./block/beginend/comment":23,"./block/beginend/verse":24,"./block/beginend/src":25,"./block/lists/dlist":26,"./block/lists/dlitem":27,"./block/lists/ulist":28,"./block/lists/ulitem":29,"./block/lists/olist":30,"./block/lists/olitem":31,"./block/special/drawer":32,"./block/special/colon":33,"./block/section":34,"./block/properties/propdef":35,"./block/special/commentline":36,"./block/para":37,"./inline/link":38,"./inline/latex":39,"./inline/fnref":40,"./inline/entity":41,"./inline/verbatim":42,"./inline/sub":43,"./inline/sup":44,"./inline/emphasis":45,"./inline/linebreak":46,"./inline/regular":47}],13:[function(require,module,exports){
+},{"./utils":4,"./render/engine":8,"./render/default/html":9,"./render/default/html-toc":10,"./block":3,"./inline":11,"./config":6,"./block/headline":12,"./document":13,"./block/properties/clockline":14,"./block/properties/deadline":15,"./block/properties/scheduled":16,"./block/properties/label":17,"./block/properties/caption":18,"./block/illust":19,"./block/special/hr":20,"./block/special/fndef":21,"./block/beginend/example":22,"./block/beginend/quote":23,"./block/beginend/center":24,"./block/beginend/comment":25,"./block/beginend/verse":26,"./block/beginend/src":27,"./block/lists/dlist":28,"./block/lists/dlitem":29,"./block/lists/ulist":30,"./block/lists/ulitem":31,"./block/lists/olist":32,"./block/lists/olitem":33,"./block/table/table":34,"./block/special/drawer":35,"./block/special/colon":36,"./block/section":37,"./block/properties/propdef":38,"./block/special/commentline":39,"./block/para":40,"./inline/link":41,"./inline/latex":42,"./inline/fnref":43,"./inline/entity":44,"./inline/verbatim":45,"./inline/sub":46,"./inline/sup":47,"./inline/emphasis":48,"./inline/linebreak":49,"./inline/regular":50}],13:[function(require,module,exports){
 var _U      = require('./utils');
 var Block   = require('./block');
 var Content = require('./block/content');
@@ -222,10 +237,28 @@ var Lines   = require('./block/lines');
 
 var Include = require('./include');
 
+var cacheProp = function (propName) {
+  var cacheName = '_' + propName;
+  return function (prop) {
+    if (prop !== void 0) {
+      this[cacheName] = prop;
+      return null;
+    }
+    else {
+      var tmp = this[cacheName];
+      this[cacheName] = null;
+      return tmp;
+    }
+  };
+};
+
 var Document = Block.define({
   parent: Section,
   type: 'document',
   methods: {
+    caption: cacheProp('caption'),
+    captionShort: cacheProp('captionShort'),
+    label: cacheProp('label'),
     init: function (org) {
       this.footnotes = [];
       this.org = org;
@@ -269,7 +302,7 @@ Document.parser = function (org) {
 };
 
 module.exports = exports = Document;
-},{"./utils":4,"./block":3,"./block/content":48,"./block/section":34,"./config":6,"./block/lines":49,"./include":50,"./core":7}],50:[function(require,module,exports){
+},{"./utils":4,"./block":3,"./block/content":51,"./block/section":37,"./config":6,"./block/lines":52,"./include":53,"./core":7}],53:[function(require,module,exports){
 var _U    = require('./utils');
 var Lines = require('./block/lines');
 
@@ -381,7 +414,7 @@ Include.prototype = {
 };
 
 module.exports = exports = Include;
-},{"./utils":4,"./block/lines":49}],11:[function(require,module,exports){
+},{"./utils":4,"./block/lines":52}],11:[function(require,module,exports){
 var _U       = require('./utils');
 var _        = _U._;
 var Lines    = require('./block/lines');
@@ -452,7 +485,7 @@ Inline.parser = function (conf) {
 //------------------------------------------------------------------------------
 
 module.exports = exports = Inline;
-},{"./utils":4,"./block/lines":49,"./tree":5}],5:[function(require,module,exports){
+},{"./utils":4,"./block/lines":52,"./tree":5}],5:[function(require,module,exports){
 var _U = require('./utils');
 var _  = _U._;
 
@@ -707,7 +740,6 @@ var _U = {
 
   array: function (o) { return Array.prototype.slice.call(o); },
 
-  
   join: function () {
     return _U.array(arguments).join('');
   },
@@ -849,7 +881,7 @@ var _U = {
   path: {
 
     parent: function (path) {
-      path = _U.trim('' + path);
+      path = ('' + path).trim();
       var split = path.split(/\//);
       if(_U.blank(split.pop())){
         split.pop();
@@ -867,7 +899,9 @@ var _U = {
   },
 
   rgxp: {
-    propLine: /^\s*#\+([A-Z_]+)\+?:\s*([\S\s]*?)\s*$/i
+    propLine: /^\s*#\+([A-Z_]+)\+?:\s*([\S\s]*?)\s*$/i,
+    tableRow: /^\s*\|.*(\s|$)/,
+    tableRowDelim: /\s*\|-+(\+-+)*\|(\s|$)/
   }
   
 };
@@ -882,7 +916,7 @@ _U.id = _U.incrementor();
 
 module.exports = exports = _U;
 })()
-},{"./shim":2}],51:[function(require,module,exports){
+},{"./shim":2}],54:[function(require,module,exports){
 (function() {
   var Org;
 
@@ -930,7 +964,7 @@ module.exports = exports = _U;
 }).call(this);
 
 
-},{"../src/core":7}],48:[function(require,module,exports){
+},{"../src/core":7}],51:[function(require,module,exports){
 var _U      = require('../utils');
 var Block   = require('../block');
 
@@ -1005,11 +1039,11 @@ Headline.parser = function (org) {
 };
 
 module.exports = exports = Headline;
-},{"../utils":4,"../config":6,"../core":7,"../block":3}],17:[function(require,module,exports){
+},{"../utils":4,"../config":6,"../core":7,"../block":3}],19:[function(require,module,exports){
 var _U    = require('../utils');
 var Block = require('../block');
 
-var rgxp = /^\s*\[\[([^\]]+(?:png|jpe?g|gif))\]\]\s*$/i;
+var rgxp = /^\s*\[\[([^\]]+\.(?:png|jpe?g|gif))\]\]\s*$/i;
 
 var Illust = Block.define({
   type: 'illust',
@@ -1029,7 +1063,7 @@ var Illust = Block.define({
 });
 
 module.exports = exports = Illust;
-},{"../utils":4,"../block":3}],49:[function(require,module,exports){
+},{"../utils":4,"../block":3}],52:[function(require,module,exports){
 var _U = require('../utils');
 var _  = _U._;
 
@@ -1163,7 +1197,7 @@ Lines.prototype = {
 };
 
 module.exports = exports = Lines;
-},{"../utils":4}],37:[function(require,module,exports){
+},{"../utils":4}],40:[function(require,module,exports){
 var _U      = require('../utils');
 var Block   = require('../block');
 var Lines   = require('./lines');
@@ -1206,7 +1240,7 @@ var Para = Block.define({
 });
 
 module.exports = exports = Para;
-},{"../utils":4,"../block":3,"./lines":49}],34:[function(require,module,exports){
+},{"../utils":4,"../block":3,"./lines":52}],37:[function(require,module,exports){
 var _U = require('../utils');
 var _  = _U._;
 
@@ -1254,7 +1288,7 @@ _U.extendProto(Section, Block, {
 });
 
 module.exports = exports = Section;
-},{"../utils":4,"../block":3,"./content":48}],45:[function(require,module,exports){
+},{"../utils":4,"../block":3,"./content":51}],48:[function(require,module,exports){
 var _U = require('../utils');
 var Inline = require('../inline');
 
@@ -1304,7 +1338,7 @@ Emphasis.types = {
 };
 
 module.exports = exports = Emphasis;
-},{"../utils":4,"../inline":11}],41:[function(require,module,exports){
+},{"../inline":11,"../utils":4}],44:[function(require,module,exports){
 var _U     = require('../utils');
 var Inline = require('../inline');
 
@@ -1722,7 +1756,7 @@ define("Diamond","\\diamond","&diamond;","[diamond]","[diamond]","⋄");
 define("loz","\\diamond","&loz;","[lozenge]","[lozenge]","◊");
 
 module.exports = exports = Entity;
-},{"../utils":4,"../inline":11}],40:[function(require,module,exports){
+},{"../utils":4,"../inline":11}],43:[function(require,module,exports){
 var _U     = require('../utils');
 var Inline = require('../inline');
 var FnDef  = require('../block/special/fndef');
@@ -1763,7 +1797,7 @@ var FnRef = Inline.define({
 });
 
 module.exports = exports = FnRef;
-},{"../utils":4,"../inline":11,"../block/special/fndef":19,"../block/lines":49}],39:[function(require,module,exports){
+},{"../utils":4,"../inline":11,"../block/special/fndef":21,"../block/lines":52}],42:[function(require,module,exports){
 var _U     = require('../utils');
 var _      = _U._;
 var Inline = require('../inline');
@@ -1805,7 +1839,7 @@ var Latex = Inline.define({
 module.exports = exports = Latex;
 
 
-},{"../utils":4,"../inline":11}],46:[function(require,module,exports){
+},{"../utils":4,"../inline":11}],49:[function(require,module,exports){
 var _U     = require('../utils');
 var Inline = require('../inline');
 
@@ -1823,7 +1857,7 @@ var Linebreak = Inline.define({
 });
 
 module.exports = exports = Linebreak;
-},{"../utils":4,"../inline":11}],38:[function(require,module,exports){
+},{"../utils":4,"../inline":11}],41:[function(require,module,exports){
 var _U     = require('../utils');
 var _      = _U._;
 var Inline = require('../inline');
@@ -1854,7 +1888,7 @@ var Link = Inline.define({
 
 module.exports = exports = Link;
 
-},{"../utils":4,"../inline":11}],47:[function(require,module,exports){
+},{"../utils":4,"../inline":11}],50:[function(require,module,exports){
 var _U     = require('../utils');
 var _      = _U._;
 var Inline = require('../inline');
@@ -1877,7 +1911,7 @@ var Regular = Inline.define({
 });
 
 module.exports = exports = Regular;
-},{"../utils":4,"../inline":11}],43:[function(require,module,exports){
+},{"../utils":4,"../inline":11}],46:[function(require,module,exports){
 var _U     = require('../utils');
 var Inline = require('../inline');
 
@@ -1909,7 +1943,7 @@ var Sub = Inline.define({
 });
 
 module.exports = exports = Sub;
-},{"../utils":4,"../inline":11}],44:[function(require,module,exports){
+},{"../utils":4,"../inline":11}],47:[function(require,module,exports){
 var _U     = require('../utils');
 var Inline = require('../inline');
 var Sub    = require('./sub');
@@ -1923,7 +1957,7 @@ var Sup = Inline.define({
 });
 
 module.exports = exports = Sup;
-},{"../utils":4,"../inline":11,"./sub":43}],42:[function(require,module,exports){
+},{"../utils":4,"../inline":11,"./sub":46}],45:[function(require,module,exports){
 var _U = require('../utils');
 var Inline = require('../inline');
 
@@ -2014,7 +2048,7 @@ RenderEngine.prototype = {
 
 module.exports = exports = RenderEngine;
 
-},{"../utils":4,"../tree":5}],52:[function(require,module,exports){
+},{"../utils":4,"../tree":5}],55:[function(require,module,exports){
 var _U    = require('../../utils');
 var _     = _U._;
 var Block = require('../../block');
@@ -2055,7 +2089,7 @@ var BeginEnd = (function () {
 }());
 
 module.exports = exports = BeginEnd;
-},{"../../utils":4,"../../block":3}],22:[function(require,module,exports){
+},{"../../utils":4,"../../block":3}],24:[function(require,module,exports){
 var Block    = require('../../block');
 var BeginEnd = require('./beginend');
 
@@ -2066,7 +2100,7 @@ var Center = Block.define({
 });
 
 module.exports = exports = Center;
-},{"../../block":3,"./beginend":52}],23:[function(require,module,exports){
+},{"../../block":3,"./beginend":55}],25:[function(require,module,exports){
 var Block    = require('../../block');
 var BeginEnd = require('./beginend');
 
@@ -2077,7 +2111,7 @@ var Comment = Block.define({
 });
 
 module.exports = exports = Comment;
-},{"../../block":3,"./beginend":52}],20:[function(require,module,exports){
+},{"../../block":3,"./beginend":55}],22:[function(require,module,exports){
 var Block    = require('../../block');
 var BeginEnd = require('./beginend');
 
@@ -2088,7 +2122,7 @@ var Example = Block.define({
 });
 
 module.exports = exports = Example;
-},{"../../block":3,"./beginend":52}],21:[function(require,module,exports){
+},{"../../block":3,"./beginend":55}],23:[function(require,module,exports){
 var Block    = require('../../block');
 var BeginEnd = require('./beginend');
 
@@ -2111,7 +2145,7 @@ var Quote = Block.define({
 });
 
 module.exports = exports = Quote;
-},{"../../block":3,"./beginend":52}],25:[function(require,module,exports){
+},{"../../block":3,"./beginend":55}],27:[function(require,module,exports){
 var Block    = require('../../block');
 var BeginEnd = require('./beginend');
 
@@ -2128,7 +2162,7 @@ var Src = Block.define({
 });
 
 module.exports = exports = Src;
-},{"../../block":3,"./beginend":52}],24:[function(require,module,exports){
+},{"../../block":3,"./beginend":55}],26:[function(require,module,exports){
 var Block    = require('../../block');
 var BeginEnd = require('./beginend');
 
@@ -2158,7 +2192,7 @@ var Verse = Block.define({
 });
 
 module.exports = exports = Verse;
-},{"../../block":3,"./beginend":52}],53:[function(require,module,exports){
+},{"../../block":3,"./beginend":55}],56:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 
@@ -2183,7 +2217,7 @@ var Item = Block.define({
 });
 
 module.exports = exports = Item;
-},{"../../utils":4,"../../block":3}],54:[function(require,module,exports){
+},{"../../utils":4,"../../block":3}],57:[function(require,module,exports){
 var _U    = require('../../utils');
 var _     = _U._;
 var Block = require('../../block');
@@ -2220,7 +2254,7 @@ List.define = function (obj) {
 };
 
 module.exports = exports = List;
-},{"../../utils":4,"../../block":3}],26:[function(require,module,exports){
+},{"../../utils":4,"../../block":3}],28:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 var List  = require('./_list');
@@ -2236,7 +2270,7 @@ var Dlist = List.define({
 });
 
 module.exports = exports = Dlist;
-},{"../../utils":4,"../../block":3,"./_list":54,"./dlitem":27}],27:[function(require,module,exports){
+},{"../../utils":4,"../../block":3,"./_list":57,"./dlitem":29}],29:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 var Item  = require('./_item') ;
@@ -2265,7 +2299,7 @@ var DlItem = Block.define({
 });
 
 module.exports = exports = DlItem;
-},{"../../utils":4,"../../block":3,"./_item":53}],30:[function(require,module,exports){
+},{"../../utils":4,"../../block":3,"./_item":56}],32:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 var List  = require('./_list');
@@ -2299,7 +2333,7 @@ var Olist = List.define({
 });
 
 module.exports = exports = Olist;
-},{"../../utils":4,"../../block":3,"./_list":54,"./olitem":31}],31:[function(require,module,exports){
+},{"../../utils":4,"../../block":3,"./_list":57,"./olitem":33}],33:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 var Item  = require('./_item') ;
@@ -2341,7 +2375,7 @@ var OlItem = Block.define({
 
 
 module.exports = exports = OlItem;
-},{"../../utils":4,"../../block":3,"./_item":53}],28:[function(require,module,exports){
+},{"../../utils":4,"../../block":3,"./_item":56}],30:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 var List  = require('./_list');
@@ -2357,7 +2391,7 @@ var Ulist = List.define({
 });
 
 module.exports = exports = Ulist;
-},{"../../utils":4,"../../block":3,"./_list":54,"./ulitem":29}],29:[function(require,module,exports){
+},{"../../utils":4,"../../block":3,"./_list":57,"./ulitem":31}],31:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 var Item  = require('./_item');
@@ -2389,7 +2423,30 @@ var UlItem = Block.define({
 });
 
 module.exports = exports = UlItem;
-},{"../../utils":4,"../../block":3,"./_item":53}],14:[function(require,module,exports){
+},{"../../utils":4,"../../block":3,"./_item":56}],18:[function(require,module,exports){
+var _U      = require('../../utils');
+var Block   = require('../../block');
+
+var rgxp = /^\s*#\+CAPTION(?:\[([^\]]*)\])?:\s*(.*?)\s*$/i;
+
+var Caption = Block.define({
+  type: 'label-def',
+  match: function (lines) {
+    return (_U.peak(lines) || '').match(rgxp);
+  },
+  methods: {
+    consume: function (lines) {
+      var line = lines.pop();
+      this.raw = line;
+      var m = rgxp.exec(line);
+      this.document().caption(m[2]);
+      if (m[1]) { this.document().captionShort(m[1]); }
+    }
+  }
+});
+
+module.exports = exports = Caption;
+},{"../../utils":4,"../../block":3}],14:[function(require,module,exports){
 var _U      = require('../../utils');
 var Block   = require('../../block');
 
@@ -2429,7 +2486,29 @@ var Deadline = Block.define({
 });
 
 module.exports = exports = Deadline;
-},{"../../utils":4,"../../block":3}],35:[function(require,module,exports){
+},{"../../utils":4,"../../block":3}],17:[function(require,module,exports){
+var _U      = require('../../utils');
+var Block   = require('../../block');
+
+var rgxp = /^\s*#\+LABEL:\s*(.*?)\s*$/i;
+
+var Label = Block.define({
+  type: 'label-def',
+  match: function (lines) {
+    return (_U.peak(lines) || '').match(rgxp);
+  },
+  methods: {
+    consume: function (lines) {
+      var line = lines.pop();
+      this.raw = line;
+      var content = rgxp.exec(line)[1];
+      this.document().label(content);
+    }
+  }
+});
+
+module.exports = exports = Label;
+},{"../../utils":4,"../../block":3}],38:[function(require,module,exports){
 var _U      = require('../../utils');
 var Block   = require('../../block');
 
@@ -2479,7 +2558,7 @@ var Scheduled = Block.define({
 });
 
 module.exports = exports = Scheduled;
-},{"../../utils":4,"../../block":3}],33:[function(require,module,exports){
+},{"../../utils":4,"../../block":3}],36:[function(require,module,exports){
 var _U      = require('../../utils');
 var Block   = require('../../block');
 
@@ -2502,7 +2581,7 @@ var Colon = Block.define({
 });
 
 module.exports = exports = Colon;
-},{"../../utils":4,"../../block":3}],36:[function(require,module,exports){
+},{"../../utils":4,"../../block":3}],39:[function(require,module,exports){
 var _U      = require('../../utils');
 var Block   = require('../../block');
 
@@ -2521,7 +2600,7 @@ var CommentLine = Block.define({
 });
 
 module.exports = exports = CommentLine;
-},{"../../utils":4,"../../block":3}],32:[function(require,module,exports){
+},{"../../utils":4,"../../block":3}],35:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 
@@ -2550,7 +2629,7 @@ var Drawer = Block.define({
 });
 
 module.exports = exports = Drawer;
-},{"../../utils":4,"../../block":3}],19:[function(require,module,exports){
+},{"../../utils":4,"../../block":3}],21:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 
@@ -2594,7 +2673,7 @@ var FnDef = Block.define({
 });
 
 module.exports = exports = FnDef;
-},{"../../utils":4,"../../block":3}],18:[function(require,module,exports){
+},{"../../utils":4,"../../block":3}],20:[function(require,module,exports){
 var _U      = require('../../utils');
 var Block   = require('../../block');
 
@@ -2613,7 +2692,88 @@ var Hr = Block.define({
 });
 
 module.exports = exports = Hr;
-},{"../../utils":4,"../../block":3}],10:[function(require,module,exports){
+},{"../../utils":4,"../../block":3}],58:[function(require,module,exports){
+var _U       = require('../../utils');
+var Block    = require('../../block');
+
+var TableCell = Block.define({
+  type: 'tablecell',
+  methods: {
+    accepts: function (lines) { return true; },
+    consume: function (content) { this.append(this.parseInline(content)); }
+  }
+});
+
+module.exports = exports = TableCell;
+},{"../../utils":4,"../../block":3}],59:[function(require,module,exports){
+var _U        = require('../../utils');
+var Block     = require('../../block');
+var TableCell = require('./cell');
+
+var rowRgxp = _U.rgxp.tableRow;
+var rowDelimRgxp = _U.rgxp.tableRowDelim;
+
+var TableRow = Block.define({
+  parent: Block,
+  type: 'tablerow',
+  match: function (lines) { return (_U.peak(lines) || '').match(rowRgxp); },
+  methods: {
+    consume: function (lines) {
+      var line = lines.peak();
+      this.indent = _U.indentLevel(line);
+      var content = lines.pop();
+
+      var cellsContent = content.trim().replace(/^\||\|$/g, '').split('|');
+
+      var row = this;
+      _.map(cellsContent, function(c) { 
+        var cell = new TableCell(row); 
+        cell.consume(c);
+        return cell;
+      });
+
+      // Remove the delimiters, not taken into account for now
+      while (lines.peak().match(rowDelimRgxp)) { lines.pop(); }
+    }
+  }
+});
+
+module.exports = exports = TableRow;
+},{"../../utils":4,"../../block":3,"./cell":58}],34:[function(require,module,exports){
+var _U          = require('../../utils');
+var Block       = require('../../block');
+var TableRow    = require('./row');
+var _           = _U._;
+
+var rowDelimRgxp = _U.rgxp.tableRowDelim;
+
+var Table = Block.define({
+  parent: Block,
+  type: 'table',
+  match: TableRow.match,
+  methods: {
+    accepts: function (lines) {
+      return this.match(lines) && _U.indentLevel(lines.peak()) === this.indent;
+    },
+    consume: function (lines) {
+      var line = lines.peak();
+      while (line.match(rowDelimRgxp)) { lines.pop(); line = lines.peak(); }
+      this.indent = _U.indentLevel(line);
+      this.tableHead = new TableRow(this);
+      this.tableHead.consume(lines);
+      do {
+        var row = new TableRow(this);
+        this.append(row);
+        row.consume(lines);
+      } while (this.accepts(lines));
+    },
+    lastRow: function () { return _.last(this.children()); }
+  }
+});
+
+module.exports = exports = Table;
+
+},{"../../utils":4,"../../block":3,"./row":59}],10:[function(require,module,exports){
 var _U = require('../../utils');
 var j  = _U.join;
 
@@ -2634,7 +2794,7 @@ var toc = {
 };
 
 module.exports = exports = toc;
-},{"./html":9,"../../utils":4}],9:[function(require,module,exports){
+},{"../../utils":4,"./html":9}],9:[function(require,module,exports){
 var _U = require('../../utils');
 var j  = _U.join;
 
@@ -2740,6 +2900,23 @@ var html = {
     return j('<dt>', r(this.tag), '</dt><dd>', r(this.children()), '</dd>');
   },
 
+  // Table blocks
+  table : function (r) {
+    var result = j(
+      '<table class="table">',
+        '<thead>', 
+        r(this.tableHead),
+        '</thead><tbody>', 
+        r(this.children()),
+        '</tbody>',
+      '</table>'
+    );
+    if (this.caption) { result += tag('center', tag('em', this.caption)); }
+    return result;
+  },
+  tablerow: tagchildren('tr'),
+  tablecell: tagchildren('td'),
+
   // Drawers
   drawer: function (r) { return ''; },
 
@@ -2814,7 +2991,7 @@ var html = {
 
 module.exports = exports = html;
 
-},{"../../utils":4}],55:[function(require,module,exports){
+},{"../../utils":4}],60:[function(require,module,exports){
 (function() {
   var Block, Config, Org, _, _U;
 
@@ -2840,7 +3017,7 @@ module.exports = exports = html;
 }).call(this);
 
 
-},{"../src/utils":4,"../src/core":7,"../src/config":6,"../src/block":3,"jasmine-matchers":56}],57:[function(require,module,exports){
+},{"../src/utils":4,"../src/core":7,"../src/config":6,"../src/block":3,"jasmine-matchers":61}],62:[function(require,module,exports){
 (function() {
   var Config;
 
@@ -2877,7 +3054,7 @@ module.exports = exports = html;
 }).call(this);
 
 
-},{"../src/config":6,"jasmine-matchers":56}],58:[function(require,module,exports){
+},{"../src/config":6,"jasmine-matchers":61}],63:[function(require,module,exports){
 (function() {
   var TreeNode, ids, _, _U;
 
@@ -2960,7 +3137,7 @@ module.exports = exports = html;
 }).call(this);
 
 
-},{"../src/utils":4,"../src/tree":5,"jasmine-matchers":56}],59:[function(require,module,exports){
+},{"../src/utils":4,"../src/tree":5,"jasmine-matchers":61}],64:[function(require,module,exports){
 (function() {
   var _U;
 
@@ -3042,7 +3219,7 @@ module.exports = exports = html;
 }).call(this);
 
 
-},{"../src/utils":4,"jasmine-matchers":56}],60:[function(require,module,exports){
+},{"../src/utils":4,"jasmine-matchers":61}],65:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -3096,7 +3273,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],56:[function(require,module,exports){
+},{}],61:[function(require,module,exports){
 (function(process){var matcherFiles = [
   'toBe.js',
   'toContain.js',
@@ -3118,7 +3295,7 @@ if (typeof process !== 'undefined' && typeof process.nextTick !== 'undefined') {
 }
 
 })(require("__browserify_process"))
-},{"__browserify_process":60}],61:[function(require,module,exports){
+},{"__browserify_process":65}],66:[function(require,module,exports){
 (function() {
   var Config, Headline;
 
@@ -3181,7 +3358,7 @@ if (typeof process !== 'undefined' && typeof process.nextTick !== 'undefined') {
 }).call(this);
 
 
-},{"../../src/config":6,"../../src/block/headline":12,"jasmine-matchers":56}],62:[function(require,module,exports){
+},{"../../src/config":6,"../../src/block/headline":12,"jasmine-matchers":61}],67:[function(require,module,exports){
 (function() {
   var Lines, txt1, txt2;
 
@@ -3274,7 +3451,7 @@ if (typeof process !== 'undefined' && typeof process.nextTick !== 'undefined') {
 }).call(this);
 
 
-},{"../../src/block/lines":49,"jasmine-matchers":56}],63:[function(require,module,exports){
+},{"../../src/block/lines":52,"jasmine-matchers":61}],68:[function(require,module,exports){
 (function() {
   var Block, Lines, Org, Section;
 
@@ -3328,7 +3505,7 @@ if (typeof process !== 'undefined' && typeof process.nextTick !== 'undefined') {
 }).call(this);
 
 
-},{"../../src/core":7,"../../src/block":3,"../../src/block/section":34,"../../src/block/lines":49,"jasmine-matchers":56}],64:[function(require,module,exports){
+},{"../../src/core":7,"../../src/block":3,"../../src/block/section":37,"../../src/block/lines":52,"jasmine-matchers":61}],69:[function(require,module,exports){
 (function() {
   var Emphasis, Inline;
 
@@ -3403,7 +3580,7 @@ if (typeof process !== 'undefined' && typeof process.nextTick !== 'undefined') {
 }).call(this);
 
 
-},{"../../src/inline":11,"../../src/inline/emphasis":45,"jasmine-matchers":56}],65:[function(require,module,exports){
+},{"../../src/inline":11,"../../src/inline/emphasis":48,"jasmine-matchers":61}],70:[function(require,module,exports){
 (function() {
   var Entity, Inline;
 
@@ -3478,7 +3655,7 @@ if (typeof process !== 'undefined' && typeof process.nextTick !== 'undefined') {
 }).call(this);
 
 
-},{"../../src/inline":11,"../../src/inline/entity":41,"jasmine-matchers":56}],66:[function(require,module,exports){
+},{"../../src/inline":11,"../../src/inline/entity":44,"jasmine-matchers":61}],71:[function(require,module,exports){
 (function() {
   var Inline, Link;
 
@@ -3532,7 +3709,7 @@ if (typeof process !== 'undefined' && typeof process.nextTick !== 'undefined') {
 }).call(this);
 
 
-},{"../../src/inline":11,"../../src/inline/link":38,"jasmine-matchers":56}],67:[function(require,module,exports){
+},{"../../src/inline":11,"../../src/inline/link":41,"jasmine-matchers":61}],72:[function(require,module,exports){
 (function() {
   var Inline, Regular;
 
@@ -3583,7 +3760,7 @@ if (typeof process !== 'undefined' && typeof process.nextTick !== 'undefined') {
 }).call(this);
 
 
-},{"../../src/inline":11,"../../src/inline/regular":47,"jasmine-matchers":56}],68:[function(require,module,exports){
+},{"../../src/inline":11,"../../src/inline/regular":50,"jasmine-matchers":61}],73:[function(require,module,exports){
 (function() {
   var RenderEngine;
 
@@ -3600,7 +3777,7 @@ if (typeof process !== 'undefined' && typeof process.nextTick !== 'undefined') {
 }).call(this);
 
 
-},{"../../src/render/engine":8,"jasmine-matchers":56}],69:[function(require,module,exports){
+},{"../../src/render/engine":8,"jasmine-matchers":61}],74:[function(require,module,exports){
 (function() {
   var Comment, Document;
 
@@ -3629,5 +3806,5 @@ if (typeof process !== 'undefined' && typeof process.nextTick !== 'undefined') {
 }).call(this);
 
 
-},{"../../../src/document":13,"../../../src/block/beginend/comment":23,"jasmine-matchers":56}]},{},[3,52,22,23,1,20,21,25,24,48,12,17,49,53,54,26,27,30,31,28,29,37,14,15,35,16,34,33,36,32,19,18,6,7,13,50,11,45,41,40,39,46,38,47,43,44,42,10,9,8,2,5,4,55,69,61,62,63,57,51,64,65,66,67,68,58,59])
+},{"../../../src/document":13,"../../../src/block/beginend/comment":25,"jasmine-matchers":61}]},{},[3,55,24,25,1,22,23,27,26,51,12,19,52,56,57,28,29,32,33,30,31,40,18,14,15,17,38,16,37,36,39,35,21,20,58,59,34,6,7,13,53,11,48,44,43,42,49,41,50,46,47,45,10,9,8,2,5,4,60,74,66,67,68,62,54,69,70,71,72,73,63,64])
 ;

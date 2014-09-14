@@ -41,6 +41,8 @@ Org.components = {
     Clockline  : Block.register(  50, require('./block/properties/clockline')),
     Deadline   : Block.register(  50, require('./block/properties/deadline')),
     Scheduled  : Block.register(  50, require('./block/properties/scheduled')),
+    Label      : Block.register(  50, require('./block/properties/label')),
+    Caption    : Block.register(  50, require('./block/properties/caption')),
     Illust     : Block.register(  60, require('./block/illust')),
     Hr         : Block.register( 100, require('./block/special/hr')),
     FnDef      : Block.register( 200, require('./block/special/fndef')),
@@ -56,6 +58,7 @@ Org.components = {
     UlItem     : Block.register( 530, require('./block/lists/ulitem')),
     Olist      : Block.register( 540, require('./block/lists/olist')),
     OlItem     : Block.register( 550, require('./block/lists/olitem')),
+    Table      : Block.register( 600, require('./block/table/table')),
     Drawer     : Block.register(1000, require('./block/special/drawer')),
     Colon      : Block.register(1100, require('./block/special/colon')),
     Section    : Block.register(8000, require('./block/section')),
@@ -82,7 +85,7 @@ global.Org = Org;
 
 module.exports = exports = Org;
 })()
-},{"./utils":2,"./render/engine":3,"./render/default/html":4,"./render/default/html-toc":5,"./block":6,"./inline":7,"./config":8,"./block/headline":9,"./document":10,"./block/properties/clockline":11,"./block/properties/deadline":12,"./block/properties/scheduled":13,"./block/illust":14,"./block/special/hr":15,"./block/special/fndef":16,"./block/beginend/example":17,"./block/beginend/center":18,"./block/beginend/quote":19,"./block/beginend/comment":20,"./block/beginend/verse":21,"./block/beginend/src":22,"./block/lists/dlist":23,"./block/lists/dlitem":24,"./block/lists/ulist":25,"./block/lists/ulitem":26,"./block/lists/olist":27,"./block/lists/olitem":28,"./block/special/drawer":29,"./block/special/colon":30,"./block/section":31,"./block/properties/propdef":32,"./block/special/commentline":33,"./block/para":34,"./inline/link":35,"./inline/latex":36,"./inline/fnref":37,"./inline/entity":38,"./inline/verbatim":39,"./inline/sub":40,"./inline/sup":41,"./inline/emphasis":42,"./inline/linebreak":43,"./inline/regular":44}],2:[function(require,module,exports){
+},{"./utils":2,"./render/engine":3,"./render/default/html":4,"./render/default/html-toc":5,"./block":6,"./inline":7,"./config":8,"./block/headline":9,"./document":10,"./block/properties/clockline":11,"./block/properties/deadline":12,"./block/properties/scheduled":13,"./block/properties/label":14,"./block/properties/caption":15,"./block/illust":16,"./block/special/hr":17,"./block/special/fndef":18,"./block/beginend/example":19,"./block/beginend/quote":20,"./block/beginend/center":21,"./block/beginend/comment":22,"./block/beginend/verse":23,"./block/beginend/src":24,"./block/lists/dlist":25,"./block/lists/dlitem":26,"./block/lists/ulist":27,"./block/lists/ulitem":28,"./block/lists/olist":29,"./block/lists/olitem":30,"./block/table/table":31,"./block/special/drawer":32,"./block/special/colon":33,"./block/section":34,"./block/properties/propdef":35,"./block/special/commentline":36,"./block/para":37,"./inline/link":38,"./inline/latex":39,"./inline/fnref":40,"./inline/entity":41,"./inline/verbatim":42,"./inline/sub":43,"./inline/sup":44,"./inline/emphasis":45,"./inline/linebreak":46,"./inline/regular":47}],2:[function(require,module,exports){
 (function(){require('./shim');
 
 dependency = function (name, alternate) {
@@ -149,7 +152,6 @@ var _U = {
 
   array: function (o) { return Array.prototype.slice.call(o); },
 
-  
   join: function () {
     return _U.array(arguments).join('');
   },
@@ -291,7 +293,7 @@ var _U = {
   path: {
 
     parent: function (path) {
-      path = _U.trim('' + path);
+      path = ('' + path).trim();
       var split = path.split(/\//);
       if(_U.blank(split.pop())){
         split.pop();
@@ -309,7 +311,9 @@ var _U = {
   },
 
   rgxp: {
-    propLine: /^\s*#\+([A-Z_]+)\+?:\s*([\S\s]*?)\s*$/i
+    propLine: /^\s*#\+([A-Z_]+)\+?:\s*([\S\s]*?)\s*$/i,
+    tableRow: /^\s*\|.*(\s|$)/,
+    tableRowDelim: /\s*\|-+(\+-+)*\|(\s|$)/
   }
   
 };
@@ -324,7 +328,7 @@ _U.id = _U.incrementor();
 
 module.exports = exports = _U;
 })()
-},{"./shim":45}],6:[function(require,module,exports){
+},{"./shim":48}],6:[function(require,module,exports){
 var _U       = require('./utils');
 var _        = _U._;
 var TreeNode = require('./tree');
@@ -374,6 +378,12 @@ Block.define = function (obj) {
   var Result = function () {
     Parent.apply(this, arguments);
     this.type = obj.type;
+    var doc = this.document();
+    if (doc && doc.caption) {
+      this.properties.caption      = doc.caption();
+      this.properties.captionShort = doc.captionShort();
+      this.properties.label        = doc.label();
+    }
     if (this.init) { this.init.apply(this, arguments); }
   };
   Result.type = obj.type;
@@ -383,7 +393,7 @@ Block.define = function (obj) {
 };
 
 module.exports = exports = Block;
-},{"./utils":2,"./tree":46}],7:[function(require,module,exports){
+},{"./utils":2,"./tree":49}],7:[function(require,module,exports){
 var _U       = require('./utils');
 var _        = _U._;
 var Lines    = require('./block/lines');
@@ -454,7 +464,7 @@ Inline.parser = function (conf) {
 //------------------------------------------------------------------------------
 
 module.exports = exports = Inline;
-},{"./utils":2,"./block/lines":47,"./tree":46}],8:[function(require,module,exports){
+},{"./utils":2,"./block/lines":50,"./tree":49}],8:[function(require,module,exports){
 var _ = require('./utils')._;
 
 var Config = {};
@@ -491,10 +501,28 @@ var Lines   = require('./block/lines');
 
 var Include = require('./include');
 
+var cacheProp = function (propName) {
+  var cacheName = '_' + propName;
+  return function (prop) {
+    if (prop !== void 0) {
+      this[cacheName] = prop;
+      return null;
+    }
+    else {
+      var tmp = this[cacheName];
+      this[cacheName] = null;
+      return tmp;
+    }
+  };
+};
+
 var Document = Block.define({
   parent: Section,
   type: 'document',
   methods: {
+    caption: cacheProp('caption'),
+    captionShort: cacheProp('captionShort'),
+    label: cacheProp('label'),
     init: function (org) {
       this.footnotes = [];
       this.org = org;
@@ -538,7 +566,7 @@ Document.parser = function (org) {
 };
 
 module.exports = exports = Document;
-},{"./utils":2,"./block":6,"./block/content":48,"./block/section":31,"./config":8,"./block/lines":47,"./include":49,"./core":1}],3:[function(require,module,exports){
+},{"./utils":2,"./block":6,"./block/content":51,"./block/section":34,"./config":8,"./block/lines":50,"./include":52,"./core":1}],3:[function(require,module,exports){
 var _U       = require('../utils');
 var _        = _U._;
 var TreeNode = require('../tree');
@@ -579,7 +607,7 @@ RenderEngine.prototype = {
 
 module.exports = exports = RenderEngine;
 
-},{"../utils":2,"../tree":46}],9:[function(require,module,exports){
+},{"../utils":2,"../tree":49}],9:[function(require,module,exports){
 var _U     = require('../utils');
 var Config = require('../config');
 var Org    = require('../core');
@@ -629,11 +657,11 @@ Headline.parser = function (org) {
 };
 
 module.exports = exports = Headline;
-},{"../utils":2,"../config":8,"../core":1,"../block":6}],14:[function(require,module,exports){
+},{"../utils":2,"../config":8,"../core":1,"../block":6}],16:[function(require,module,exports){
 var _U    = require('../utils');
 var Block = require('../block');
 
-var rgxp = /^\s*\[\[([^\]]+(?:png|jpe?g|gif))\]\]\s*$/i;
+var rgxp = /^\s*\[\[([^\]]+\.(?:png|jpe?g|gif))\]\]\s*$/i;
 
 var Illust = Block.define({
   type: 'illust',
@@ -653,7 +681,7 @@ var Illust = Block.define({
 });
 
 module.exports = exports = Illust;
-},{"../utils":2,"../block":6}],31:[function(require,module,exports){
+},{"../utils":2,"../block":6}],34:[function(require,module,exports){
 var _U = require('../utils');
 var _  = _U._;
 
@@ -701,7 +729,7 @@ _U.extendProto(Section, Block, {
 });
 
 module.exports = exports = Section;
-},{"../utils":2,"../block":6,"./content":48}],34:[function(require,module,exports){
+},{"../utils":2,"../block":6,"./content":51}],37:[function(require,module,exports){
 var _U      = require('../utils');
 var Block   = require('../block');
 var Lines   = require('./lines');
@@ -744,7 +772,7 @@ var Para = Block.define({
 });
 
 module.exports = exports = Para;
-},{"../utils":2,"../block":6,"./lines":47}],35:[function(require,module,exports){
+},{"../utils":2,"../block":6,"./lines":50}],38:[function(require,module,exports){
 var _U     = require('../utils');
 var _      = _U._;
 var Inline = require('../inline');
@@ -775,7 +803,7 @@ var Link = Inline.define({
 
 module.exports = exports = Link;
 
-},{"../utils":2,"../inline":7}],36:[function(require,module,exports){
+},{"../utils":2,"../inline":7}],39:[function(require,module,exports){
 var _U     = require('../utils');
 var _      = _U._;
 var Inline = require('../inline');
@@ -817,7 +845,7 @@ var Latex = Inline.define({
 module.exports = exports = Latex;
 
 
-},{"../utils":2,"../inline":7}],37:[function(require,module,exports){
+},{"../utils":2,"../inline":7}],40:[function(require,module,exports){
 var _U     = require('../utils');
 var Inline = require('../inline');
 var FnDef  = require('../block/special/fndef');
@@ -858,7 +886,7 @@ var FnRef = Inline.define({
 });
 
 module.exports = exports = FnRef;
-},{"../utils":2,"../inline":7,"../block/special/fndef":16,"../block/lines":47}],38:[function(require,module,exports){
+},{"../utils":2,"../inline":7,"../block/special/fndef":18,"../block/lines":50}],41:[function(require,module,exports){
 var _U     = require('../utils');
 var Inline = require('../inline');
 
@@ -1276,7 +1304,7 @@ define("Diamond","\\diamond","&diamond;","[diamond]","[diamond]","⋄");
 define("loz","\\diamond","&loz;","[lozenge]","[lozenge]","◊");
 
 module.exports = exports = Entity;
-},{"../utils":2,"../inline":7}],39:[function(require,module,exports){
+},{"../utils":2,"../inline":7}],42:[function(require,module,exports){
 var _U = require('../utils');
 var Inline = require('../inline');
 
@@ -1326,7 +1354,7 @@ var Code = verbTypes['='] = Inline.define({
 Verbatim.types = verbTypes;
 
 module.exports = exports = Verbatim;
-},{"../utils":2,"../inline":7}],40:[function(require,module,exports){
+},{"../utils":2,"../inline":7}],43:[function(require,module,exports){
 var _U     = require('../utils');
 var Inline = require('../inline');
 
@@ -1358,7 +1386,7 @@ var Sub = Inline.define({
 });
 
 module.exports = exports = Sub;
-},{"../utils":2,"../inline":7}],41:[function(require,module,exports){
+},{"../utils":2,"../inline":7}],44:[function(require,module,exports){
 var _U     = require('../utils');
 var Inline = require('../inline');
 var Sub    = require('./sub');
@@ -1372,7 +1400,7 @@ var Sup = Inline.define({
 });
 
 module.exports = exports = Sup;
-},{"../utils":2,"../inline":7,"./sub":40}],42:[function(require,module,exports){
+},{"../utils":2,"../inline":7,"./sub":43}],45:[function(require,module,exports){
 var _U = require('../utils');
 var Inline = require('../inline');
 
@@ -1422,7 +1450,7 @@ Emphasis.types = {
 };
 
 module.exports = exports = Emphasis;
-},{"../utils":2,"../inline":7}],43:[function(require,module,exports){
+},{"../utils":2,"../inline":7}],46:[function(require,module,exports){
 var _U     = require('../utils');
 var Inline = require('../inline');
 
@@ -1440,7 +1468,7 @@ var Linebreak = Inline.define({
 });
 
 module.exports = exports = Linebreak;
-},{"../utils":2,"../inline":7}],44:[function(require,module,exports){
+},{"../utils":2,"../inline":7}],47:[function(require,module,exports){
 var _U     = require('../utils');
 var _      = _U._;
 var Inline = require('../inline');
@@ -1568,6 +1596,24 @@ var html = {
   dlitem: function (r) {
     return j('<dt>', r(this.tag), '</dt><dd>', r(this.children()), '</dd>');
   },
+
+  // Table blocks
+  table : function (r) {
+    var caption = this.properties.caption;
+    var result = j(
+      '<table class="table">',
+        caption ? tag('caption', caption) : '',
+        '<thead>', 
+        r(this.tableHead),
+        '</thead><tbody>', 
+        r(this.children()),
+        '</tbody>',
+      '</table>'
+    );
+    return result;
+  },
+  tablerow: tagchildren('tr'),
+  tablecell: tagchildren('td'),
 
   // Drawers
   drawer: function (r) { return ''; },
@@ -1724,7 +1770,52 @@ var Scheduled = Block.define({
 });
 
 module.exports = exports = Scheduled;
+},{"../../utils":2,"../../block":6}],14:[function(require,module,exports){
+var _U      = require('../../utils');
+var Block   = require('../../block');
+
+var rgxp = /^\s*#\+LABEL:\s*(.*?)\s*$/i;
+
+var Label = Block.define({
+  type: 'label-def',
+  match: function (lines) {
+    return (_U.peak(lines) || '').match(rgxp);
+  },
+  methods: {
+    consume: function (lines) {
+      var line = lines.pop();
+      this.raw = line;
+      var content = rgxp.exec(line)[1];
+      this.document().label(content);
+    }
+  }
+});
+
+module.exports = exports = Label;
 },{"../../utils":2,"../../block":6}],15:[function(require,module,exports){
+var _U      = require('../../utils');
+var Block   = require('../../block');
+
+var rgxp = /^\s*#\+CAPTION(?:\[([^\]]*)\])?:\s*(.*?)\s*$/i;
+
+var Caption = Block.define({
+  type: 'label-def',
+  match: function (lines) {
+    return (_U.peak(lines) || '').match(rgxp);
+  },
+  methods: {
+    consume: function (lines) {
+      var line = lines.pop();
+      this.raw = line;
+      var m = rgxp.exec(line);
+      this.document().caption(m[2]);
+      if (m[1]) { this.document().captionShort(m[1]); }
+    }
+  }
+});
+
+module.exports = exports = Caption;
+},{"../../utils":2,"../../block":6}],17:[function(require,module,exports){
 var _U      = require('../../utils');
 var Block   = require('../../block');
 
@@ -1743,7 +1834,7 @@ var Hr = Block.define({
 });
 
 module.exports = exports = Hr;
-},{"../../utils":2,"../../block":6}],16:[function(require,module,exports){
+},{"../../utils":2,"../../block":6}],18:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 
@@ -1787,7 +1878,7 @@ var FnDef = Block.define({
 });
 
 module.exports = exports = FnDef;
-},{"../../utils":2,"../../block":6}],17:[function(require,module,exports){
+},{"../../utils":2,"../../block":6}],19:[function(require,module,exports){
 var Block    = require('../../block');
 var BeginEnd = require('./beginend');
 
@@ -1798,18 +1889,7 @@ var Example = Block.define({
 });
 
 module.exports = exports = Example;
-},{"../../block":6,"./beginend":50}],18:[function(require,module,exports){
-var Block    = require('../../block');
-var BeginEnd = require('./beginend');
-
-var Center = Block.define({
-  parent: BeginEnd,
-  type: 'center',
-  methods: {}
-});
-
-module.exports = exports = Center;
-},{"../../block":6,"./beginend":50}],19:[function(require,module,exports){
+},{"../../block":6,"./beginend":53}],20:[function(require,module,exports){
 var Block    = require('../../block');
 var BeginEnd = require('./beginend');
 
@@ -1832,7 +1912,18 @@ var Quote = Block.define({
 });
 
 module.exports = exports = Quote;
-},{"../../block":6,"./beginend":50}],20:[function(require,module,exports){
+},{"../../block":6,"./beginend":53}],21:[function(require,module,exports){
+var Block    = require('../../block');
+var BeginEnd = require('./beginend');
+
+var Center = Block.define({
+  parent: BeginEnd,
+  type: 'center',
+  methods: {}
+});
+
+module.exports = exports = Center;
+},{"../../block":6,"./beginend":53}],22:[function(require,module,exports){
 var Block    = require('../../block');
 var BeginEnd = require('./beginend');
 
@@ -1843,7 +1934,7 @@ var Comment = Block.define({
 });
 
 module.exports = exports = Comment;
-},{"../../block":6,"./beginend":50}],21:[function(require,module,exports){
+},{"../../block":6,"./beginend":53}],23:[function(require,module,exports){
 var Block    = require('../../block');
 var BeginEnd = require('./beginend');
 
@@ -1873,7 +1964,7 @@ var Verse = Block.define({
 });
 
 module.exports = exports = Verse;
-},{"../../block":6,"./beginend":50}],22:[function(require,module,exports){
+},{"../../block":6,"./beginend":53}],24:[function(require,module,exports){
 var Block    = require('../../block');
 var BeginEnd = require('./beginend');
 
@@ -1890,7 +1981,7 @@ var Src = Block.define({
 });
 
 module.exports = exports = Src;
-},{"../../block":6,"./beginend":50}],23:[function(require,module,exports){
+},{"../../block":6,"./beginend":53}],25:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 var List  = require('./_list');
@@ -1906,7 +1997,7 @@ var Dlist = List.define({
 });
 
 module.exports = exports = Dlist;
-},{"../../utils":2,"../../block":6,"./_list":51,"./dlitem":24}],24:[function(require,module,exports){
+},{"../../utils":2,"../../block":6,"./_list":54,"./dlitem":26}],26:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 var Item  = require('./_item') ;
@@ -1935,7 +2026,7 @@ var DlItem = Block.define({
 });
 
 module.exports = exports = DlItem;
-},{"../../utils":2,"../../block":6,"./_item":52}],25:[function(require,module,exports){
+},{"../../utils":2,"../../block":6,"./_item":55}],27:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 var List  = require('./_list');
@@ -1951,7 +2042,7 @@ var Ulist = List.define({
 });
 
 module.exports = exports = Ulist;
-},{"../../utils":2,"../../block":6,"./_list":51,"./ulitem":26}],26:[function(require,module,exports){
+},{"../../utils":2,"../../block":6,"./_list":54,"./ulitem":28}],28:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 var Item  = require('./_item');
@@ -1983,7 +2074,7 @@ var UlItem = Block.define({
 });
 
 module.exports = exports = UlItem;
-},{"../../utils":2,"../../block":6,"./_item":52}],27:[function(require,module,exports){
+},{"../../utils":2,"../../block":6,"./_item":55}],29:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 var List  = require('./_list');
@@ -2017,7 +2108,7 @@ var Olist = List.define({
 });
 
 module.exports = exports = Olist;
-},{"../../utils":2,"../../block":6,"./_list":51,"./olitem":28}],28:[function(require,module,exports){
+},{"../../utils":2,"../../block":6,"./_list":54,"./olitem":30}],30:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 var Item  = require('./_item') ;
@@ -2059,7 +2150,42 @@ var OlItem = Block.define({
 
 
 module.exports = exports = OlItem;
-},{"../../utils":2,"../../block":6,"./_item":52}],29:[function(require,module,exports){
+},{"../../utils":2,"../../block":6,"./_item":55}],31:[function(require,module,exports){
+var _U          = require('../../utils');
+var Block       = require('../../block');
+var TableRow    = require('./row');
+
+var rowDelimRgxp = _U.rgxp.tableRowDelim;
+
+var Table = Block.define({
+  parent: Block,
+  type: 'table',
+  match: TableRow.match,
+  methods: {
+    accepts: function (lines) {
+      var line = lines.peak();
+      return _U.rgxp.tableRow.exec(line) && 
+        _U.indentLevel(line) === this.indent;
+    },
+    consume: function (lines) {
+      var line = lines.peak();
+      while (line.match(rowDelimRgxp)) { lines.pop(); line = lines.peak(); }
+      this.indent = _U.indentLevel(line);
+      this.tableHead = new TableRow(this);
+      this.tableHead.consume(lines);
+      do {
+        var row = new TableRow(this);
+        this.append(row);
+        row.consume(lines);
+      } while (this.accepts(lines));
+    },
+    lastRow: function () { return _.last(this.children()); }
+  }
+});
+
+module.exports = exports = Table;
+
+},{"../../utils":2,"../../block":6,"./row":56}],32:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 
@@ -2088,7 +2214,7 @@ var Drawer = Block.define({
 });
 
 module.exports = exports = Drawer;
-},{"../../utils":2,"../../block":6}],30:[function(require,module,exports){
+},{"../../utils":2,"../../block":6}],33:[function(require,module,exports){
 var _U      = require('../../utils');
 var Block   = require('../../block');
 
@@ -2111,7 +2237,7 @@ var Colon = Block.define({
 });
 
 module.exports = exports = Colon;
-},{"../../utils":2,"../../block":6}],32:[function(require,module,exports){
+},{"../../utils":2,"../../block":6}],35:[function(require,module,exports){
 var _U      = require('../../utils');
 var Block   = require('../../block');
 
@@ -2141,7 +2267,7 @@ var PropDef = Block.define({
 });
 
 module.exports = exports = PropDef;
-},{"../../utils":2,"../../block":6}],33:[function(require,module,exports){
+},{"../../utils":2,"../../block":6}],36:[function(require,module,exports){
 var _U      = require('../../utils');
 var Block   = require('../../block');
 
@@ -2160,7 +2286,7 @@ var CommentLine = Block.define({
 });
 
 module.exports = exports = CommentLine;
-},{"../../utils":2,"../../block":6}],45:[function(require,module,exports){
+},{"../../utils":2,"../../block":6}],48:[function(require,module,exports){
 
 if (typeof Object.create !== 'function') {
   Object.create = function (o) {
@@ -2202,7 +2328,13 @@ if (!Array.prototype.indexOf) {
     return -1;
   };
 }
-},{}],46:[function(require,module,exports){
+
+if (!String.prototype.trim) {
+  String.prototype.trim = function () {
+    return this.replace(/^[\s\xA0]+|[\s\xA0]+$/g, '');
+  };
+}
+},{}],49:[function(require,module,exports){
 var _U = require('./utils');
 var _  = _U._;
 
@@ -2390,7 +2522,7 @@ TreeNode.prototype = {
 };
 
 module.exports = exports = TreeNode;
-},{"./utils":2,"./core":1}],49:[function(require,module,exports){
+},{"./utils":2,"./core":1}],52:[function(require,module,exports){
 var _U    = require('./utils');
 var Lines = require('./block/lines');
 
@@ -2502,7 +2634,7 @@ Include.prototype = {
 };
 
 module.exports = exports = Include;
-},{"./utils":2,"./block/lines":47}],47:[function(require,module,exports){
+},{"./utils":2,"./block/lines":50}],50:[function(require,module,exports){
 var _U = require('../utils');
 var _  = _U._;
 
@@ -2636,7 +2768,7 @@ Lines.prototype = {
 };
 
 module.exports = exports = Lines;
-},{"../utils":2}],48:[function(require,module,exports){
+},{"../utils":2}],51:[function(require,module,exports){
 var _U      = require('../utils');
 var Block   = require('../block');
 
@@ -2661,7 +2793,7 @@ _U.extendProto(Content, Block, {
 });
 
 module.exports = exports = Content;
-},{"../utils":2,"../block":6}],50:[function(require,module,exports){
+},{"../utils":2,"../block":6}],53:[function(require,module,exports){
 var _U    = require('../../utils');
 var _     = _U._;
 var Block = require('../../block');
@@ -2702,7 +2834,7 @@ var BeginEnd = (function () {
 }());
 
 module.exports = exports = BeginEnd;
-},{"../../utils":2,"../../block":6}],51:[function(require,module,exports){
+},{"../../utils":2,"../../block":6}],54:[function(require,module,exports){
 var _U    = require('../../utils');
 var _     = _U._;
 var Block = require('../../block');
@@ -2739,7 +2871,7 @@ List.define = function (obj) {
 };
 
 module.exports = exports = List;
-},{"../../utils":2,"../../block":6}],52:[function(require,module,exports){
+},{"../../utils":2,"../../block":6}],55:[function(require,module,exports){
 var _U    = require('../../utils');
 var Block = require('../../block');
 
@@ -2764,5 +2896,53 @@ var Item = Block.define({
 });
 
 module.exports = exports = Item;
+},{"../../block":6,"../../utils":2}],56:[function(require,module,exports){
+var _U        = require('../../utils');
+var Block     = require('../../block');
+var TableCell = require('./cell');
+
+var rowRgxp = _U.rgxp.tableRow;
+var rowDelimRgxp = _U.rgxp.tableRowDelim;
+
+var TableRow = Block.define({
+  parent: Block,
+  type: 'tablerow',
+  match: function (lines) { return (_U.peak(lines) || '').match(rowRgxp); },
+  methods: {
+    consume: function (lines) {
+      var line = lines.peak();
+      this.indent = _U.indentLevel(line);
+      var content = lines.pop();
+
+      var cellsContent = content.trim().replace(/^\||\|$/g, '').split('|');
+
+      var row = this;
+      _.map(cellsContent, function(c) { 
+        var cell = new TableCell(row); 
+        row.append(cell);
+        cell.consume(c);
+        return cell;
+      });
+
+      // Remove the delimiters, not taken into account for now
+      while (lines.peak().match(rowDelimRgxp)) { lines.pop(); }
+    }
+  }
+});
+
+module.exports = exports = TableRow;
+},{"../../utils":2,"../../block":6,"./cell":57}],57:[function(require,module,exports){
+var _U       = require('../../utils');
+var Block    = require('../../block');
+
+var TableCell = Block.define({
+  type: 'tablecell',
+  methods: {
+    accepts: function (lines) { return true; },
+    consume: function (content) { this.append(this.parseInline(content)); }
+  }
+});
+
+module.exports = exports = TableCell;
 },{"../../utils":2,"../../block":6}]},{},[1])
 ;
